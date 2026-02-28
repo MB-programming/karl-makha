@@ -21,9 +21,9 @@ $branches = $db->query("
 $articles = [];
 try {
     $artPDO = new PDO(
-        'mysql:host=localhost;dbname=makhazenalenaya_articlesdb;charset=utf8mb4',
-        'makhazenalenaya_makhazenalenaya',
-        'ZG[pJe%b2+!j',
+        'mysql:host=localhost;dbname=makhazenalenaya_blogs;charset=utf8mb4',
+        'makhazenalenaya_blogs',
+        '?BN0Mn5x$(K$',
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
     );
     $articles = $artPDO->query("

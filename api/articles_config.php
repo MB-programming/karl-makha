@@ -5,9 +5,9 @@
 // ================================================
 
 define('ART_DB_HOST',    'localhost');
-define('ART_DB_NAME',    'makhazenalenaya_articlesdb');
-define('ART_DB_USER',    'makhazenalenaya_makhazenalenaya');
-define('ART_DB_PASS',    'ZG[pJe%b2+!j');
+define('ART_DB_NAME',    'makhazenalenaya_blogs');
+define('ART_DB_USER',    'makhazenalenaya_blogs');
+define('ART_DB_PASS',    '?BN0Mn5x$(K$');
 define('ART_DB_CHARSET', 'utf8mb4');
 
 // اسم الجلسة — مختلف تماماً عن الأدمن الرئيسي
