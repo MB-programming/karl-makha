@@ -188,11 +188,11 @@ a { text-decoration:none; color:#007bff; }
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');
 
-  fetch('/api/get_data.php')
+  fetch('/api/articles_api.php?slug=' + encodeURIComponent(slug))
     .then(r => r.json())
     .then(d => {
-      const article = d.articles.find(a => a.slug === slug);
-      if (!article) return;
+      if (!d.success || !d.data) return;
+      const article = d.data;
 
       document.getElementById('hero-title').textContent   = article.title   || '';
       document.getElementById('hero-excerpt').textContent = article.excerpt  || '';
