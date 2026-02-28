@@ -31,11 +31,6 @@
       <span>البراندات</span>
       <span class="nav-badge" id="badge-brands">0</span>
     </button>
-    <button class="nav-item" data-tab="articles">
-      <i class="fas fa-tags"></i>
-      <span>المقالات</span>
-      <span class="nav-badge" id="badge-articles">0</span>
-    </button>
     <button class="nav-item" data-tab="social">
       <i class="fas fa-share-alt"></i>
       <span>التواصل الاجتماعي</span>
@@ -148,42 +143,6 @@
       </div>
     </div>
 
-    <!-- ======= ARTICALS TAB ======= -->
-    <div id="tab-articles" class="tab-content">
-      <div class="tab-toolbar">
-        <div class="toolbar-left">
-          <h2 class="tab-title">إدارة المقالات</h2>
-          <span class="count-label" id="articles-count"></span>
-        </div>
-        <button class="btn-add" onclick="openModal('article')">
-          <i class="fas fa-plus"></i> إضافة مقاله
-        </button>
-      </div>
-      <div class="search-bar">
-        <i class="fas fa-search"></i>
-        <input type="text" placeholder="بحث في المقالات..." oninput="filterTable('articals-table', this.value)" />
-      </div>
-      <div class="table-wrap">
-        <table class="data-table" id="articles-table">
-          <thead>
-            <tr>
-                <th>#</th>
-                <th>الصورة</th>
-                <th>العنوان</th>
-                <th>التصنيف</th>
-                <th>الكاتب</th>
-                <th>مميز</th>
-                <th>الحالة</th>
-                <th>المشاهدات</th>
-                <th>تاريخ النشر</th>
-                <th>الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="articles-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-    
     <!-- ======= SOCIAL TAB ======= -->
     <div id="tab-social" class="tab-content">
       <div class="tab-toolbar">

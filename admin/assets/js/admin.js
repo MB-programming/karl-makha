@@ -16,7 +16,6 @@ const state = {
   data: {
     branches: [],
     brands: [],
-    articles: [],
     social: [],
     contact: [],
   },
@@ -104,7 +103,6 @@ function switchTab(tab) {
   const titles = {
     branches: 'الفروع',
     brands:   'البراندات',
-    blogs:   'المقالات',
     social:   'التواصل الاجتماعي',
     contact:  'معلومات التواصل',
     tracking: 'كودات التتبع',
@@ -174,91 +172,6 @@ function renderBrands(rows) {
   document.getElementById('badge-brands').textContent = rows.length;
 }
 
-// --- BRANDS ---
-function renderArticles(rows) {
-  const tbody = document.getElementById('articles-tbody');
-  tbody.innerHTML = '';
-
-  rows.forEach((row, i) => {
-    const logoHtml = row.logo_url
-      ? `<img src="../${row.image}" class="article-thumb" alt="${row.title}" />`
-      : `<div class="article-placeholder-icon"><i class="fas fa-tag"></i></div>`;
-
-    const tr = document.createElement('tr');
-
-    const coverHtml = row.cover_image
-      ? `<img src="${row.cover_image}" style="width:50px;height:50px;object-fit:cover;border-radius:6px">`
-      : "-";
-    
-    const featuredBadge = row.is_featured
-      ? `<span class="badge bg-warning">مميز</span>`
-      : `<span class="badge bg-secondary">عادي</span>`;
-    
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-    
-      <td>${coverHtml}</td>
-    
-      <td>
-        <strong style="color:#fff">${row.title}</strong>
-      </td>
-    
-      <td>${row.category || "-"}</td>
-    
-      <td>${row.author_name || "-"}</td>
-    
-      <td>${featuredBadge}</td>
-    
-      <td>${statusBadge(row.is_active)}</td>
-    
-      <td>${row.view_count}</td>
-    
-      <td>${row.published_at || "-"}</td>
-    
-      <td>
-        <div class="actions">
-    
-          <button class="btn-icon"
-            title="تعديل"
-            onclick="editRecord('articles', ${row.id})">
-            <i class="fas fa-edit"></i>
-          </button>
-    
-          <button class="btn-icon"
-            title="تفعيل/تعطيل"
-            onclick="toggleRecord('articles', ${row.id})">
-            <i class="fas fa-toggle-on"></i>
-          </button>
-    
-          <button class="btn-icon del"
-            title="حذف"
-            onclick="confirmDelete('articles', ${row.id})">
-            <i class="fas fa-trash"></i>
-          </button>
-    
-        </div>
-      </td>
-    `;
-    // tr.innerHTML = `
-    //   <td>${i + 1}</td>
-    //   <td>${logoHtml}</td>
-    //   <td><strong style="color:#fff">${row.title_en}</strong></td>
-    //   <td>${row.title_ar || '-'}</td>
-    //   <td>${statusBadge(row.is_active)}</td>
-    //   <td>
-    //     <div class="actions">
-    //       <button class="btn-icon" title="تعديل" onclick="editRecord('brands', ${row.id})"><i class="fas fa-edit"></i></button>
-    //       <button class="btn-icon" title="تفعيل/تعطيل" onclick="toggleRecord('brands', ${row.id})"><i class="fas fa-toggle-on"></i></button>
-    //       <button class="btn-icon del" title="حذف" onclick="confirmDelete('brands', ${row.id})"><i class="fas fa-trash"></i></button>
-    //     </div>
-    //   </td>`;
-    tbody.appendChild(tr);
-  });
-
-  document.getElementById('articles-count').textContent = `(${rows.length} مقاله)`;
-  document.getElementById('badge-articles').textContent = rows.length;
-}
-
 // --- SOCIAL ---
 function renderSocial(rows) {
   const tbody = document.getElementById('social-tbody');
@@ -316,23 +229,20 @@ function renderContact(rows) {
 // ============================================================
 async function loadAll() {
   try {
-    const [branches, brands, articles, social, contact] = await Promise.all([
+    const [branches, brands, social, contact] = await Promise.all([
       apiGet('branches'),
       apiGet('brands'),
-      apiGet('articles'),
       apiGet('social_media'),
       apiGet('contact_info'),
     ]);
 
     state.data.branches = branches;
     state.data.brands   = brands;
-    state.data.articles   = articles;
     state.data.social   = social;
     state.data.contact  = contact;
 
     renderBranches(branches);
     renderBrands(brands);
-    renderArticles(articles)
     renderSocial(social);
     renderContact(contact);
   } catch (err) {
@@ -450,224 +360,6 @@ const FORMS = {
       </div>
     </div>`,
 
-    article: (data = {}) => `
-      <div class="form-row">
-    
-        <div class="modal-form-group">
-          <label>العنوان *</label>
-          <input type="text"
-            class="form-input"
-            id="f-title"
-            value="${data.title || ''}" />
-        </div>
-    
-        <div class="modal-form-group">
-          <label>Slug</label>
-          <input type="text"
-            class="form-input"
-            id="f-slug"
-            value="${data.slug || ''}"
-            dir="ltr" />
-        </div>
-    
-      </div>
-    
-    
-      <div class="modal-form-group">
-        <label>الوصف المختصر</label>
-        <textarea
-          class="form-input"
-          id="f-excerpt"
-          rows="2"
-        >${data.excerpt || ''}</textarea>
-      </div>
-    
-    
-      <div class="modal-form-group">
-        <label>المحتوى</label>
-        <textarea
-          class="form-input"
-          id="f-body"
-          rows="6"
-        >${data.body || ''}</textarea>
-      </div>
-    
-    
-      <div class="modal-form-group">
-    
-        <label>صورة المقال</label>
-    
-        <div id="cover-zone">
-    
-          ${data.cover_image
-            ? `<div class="logo-current-wrap">
-    
-                <div class="logo-current-preview">
-                  <img src="../${data.cover_image}"
-                       id="cover-current-img" />
-                </div>
-    
-                <div class="logo-current-actions">
-    
-                  <button type="button"
-                    class="btn-change-logo"
-                    onclick="document.getElementById('cover-file').click()">
-    
-                    تغيير الصورة
-                  </button>
-    
-                  <button type="button"
-                    class="btn-remove-logo"
-                    onclick="removeCover()">
-    
-                    حذف
-                  </button>
-    
-                </div>
-    
-              </div>`
-            :
-            `<div class="upload-area"
-                 onclick="document.getElementById('cover-file').click()">
-    
-              <i class="fas fa-cloud-upload-alt"></i>
-              <p>رفع صورة</p>
-    
-            </div>`
-          }
-    
-          <div id="upload-preview"></div>
-    
-        </div>
-    
-        <input type="file"
-          id="cover-file"
-          accept="image/*"
-          style="display:none"
-          onchange="previewAndUpload(this)" />
-    
-        <input type="hidden"
-          id="f-cover_image"
-          value="${data.cover_image || ''}" />
-    
-      </div>
-    
-    
-    
-      <div class="form-row">
-    
-        <div class="modal-form-group">
-          <label>التصنيف</label>
-          <input type="text"
-            class="form-input"
-            id="f-category"
-            value="${data.category || ''}" />
-        </div>
-    
-        <div class="modal-form-group">
-          <label>الكاتب</label>
-          <input type="text"
-            class="form-input"
-            id="f-author_name"
-            value="${data.author_name || ''}" />
-        </div>
-    
-      </div>
-    
-    
-    
-      <div class="form-row">
-    
-        <div class="modal-form-group">
-          <label>مميز</label>
-          <select class="form-input" id="f-is_featured">
-    
-            <option value="1"
-              ${data.is_featured ? 'selected' : ''}>
-              نعم
-            </option>
-    
-            <option value="0"
-              ${!data.is_featured ? 'selected' : ''}>
-              لا
-            </option>
-    
-          </select>
-        </div>
-    
-    
-        <div class="modal-form-group">
-          <label>الحالة</label>
-    
-          <select class="form-input"
-            id="f-is_active">
-    
-            <option value="1"
-              ${data.is_active != 0 ? 'selected' : ''}>
-              نشط
-            </option>
-    
-            <option value="0"
-              ${data.is_active == 0 ? 'selected' : ''}>
-              معطل
-            </option>
-    
-          </select>
-    
-        </div>
-    
-      </div>
-    
-    
-    
-      <div class="form-row">
-    
-        <div class="modal-form-group">
-          <label>ترتيب</label>
-          <input type="number"
-            class="form-input"
-            id="f-sort_order"
-            value="${data.sort_order || 0}" />
-        </div>
-    
-    
-        <div class="modal-form-group">
-          <label>تاريخ النشر</label>
-          <input type="datetime-local"
-            class="form-input"
-            id="f-published_at"
-            value="${data.published_at || ''}" />
-        </div>
-    
-      </div>
-    
-    
-    
-      <hr>
-    
-    
-      <h4>SEO</h4>
-    
-    
-      <div class="modal-form-group">
-        <label>SEO Title</label>
-        <input type="text"
-          class="form-input"
-          id="f-seo_title"
-          value="${data.seo_title || ''}" />
-      </div>
-    
-    
-      <div class="modal-form-group">
-        <label>SEO Description</label>
-        <textarea
-          class="form-input"
-          id="f-seo_description"
-          rows="2"
-        >${data.seo_description || ''}</textarea>
-      </div>
-    `,
-
   social: (data = {}) => `
     <div class="form-row">
       <div class="modal-form-group">
@@ -751,15 +443,13 @@ const FORMS = {
 const MODAL_TITLES = {
   branch:  'فرع',
   brand:   'براند',
-  article:   'مقاله',
   social:  'منصة تواصل',
   contact: 'معلومة تواصل',
 };
 
 function openModal(type, data = {}) {
-  state.editTable = type === 'branch'  ? 'branches'    :
-                    type === 'brand'   ? 'brands'      :
-                    type === 'article'   ? 'articles'  :
+  state.editTable = type === 'branch'  ? 'branches'     :
+                    type === 'brand'   ? 'brands'       :
                     type === 'social'  ? 'social_media' :
                     type === 'contact' ? 'contact_info' : type;
 
@@ -832,7 +522,6 @@ async function editRecord(table, id) {
     const typeMap = {
       branches:    'branch',
       brands:      'brand',
-      articles:      'article',
       social_media:'social',
       contact_info:'contact',
     };
