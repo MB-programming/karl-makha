@@ -9,6 +9,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="../admin/assets/css/admin.css" />
+  <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css" />
+  <style>
+    /* Quill — تصميم يتناسب مع الأدمن الداكن */
+    #quill-editor-container { border-radius: 8px; overflow: hidden; margin-top: 4px; }
+    .ql-toolbar.ql-snow {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      border-bottom: none !important;
+      border-radius: 8px 8px 0 0;
+      direction: rtl;
+    }
+    .ql-toolbar .ql-stroke { stroke: #e0f0f5; }
+    .ql-toolbar .ql-fill  { fill:   #e0f0f5; }
+    .ql-toolbar .ql-picker-label { color: #e0f0f5; }
+    .ql-toolbar .ql-picker-options { background: #0e7290; border-color: rgba(255,255,255,0.15); }
+    .ql-toolbar button:hover .ql-stroke,
+    .ql-toolbar button.ql-active .ql-stroke { stroke: #FFCF06; }
+    .ql-toolbar button:hover .ql-fill,
+    .ql-toolbar button.ql-active .ql-fill  { fill: #FFCF06; }
+    .ql-container.ql-snow {
+      border: 1px solid rgba(255,255,255,0.15) !important;
+      border-radius: 0 0 8px 8px;
+      font-family: 'Tajawal', sans-serif;
+    }
+    .ql-editor {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      min-height: 220px;
+      direction: rtl;
+      text-align: right;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .ql-editor.ql-blank::before {
+      color: rgba(255,255,255,0.35);
+      font-style: normal;
+      right: 15px; left: auto;
+    }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: #FFCF06; }
+    .ql-editor a { color: #7dd3f0; }
+    .ql-editor blockquote {
+      border-right: 3px solid #FFCF06;
+      border-left: none;
+      padding-right: 12px;
+      color: #ccc;
+    }
+  </style>
 </head>
 <body class="dashboard-page">
 
@@ -129,6 +177,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script src="assets/js/articles-admin.js"></script>
 </body>
 </html>

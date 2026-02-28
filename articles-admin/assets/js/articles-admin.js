@@ -13,6 +13,9 @@ const state = {
   articles:  [],
 };
 
+// Quill rich editor instance
+let quillInstance = null;
+
 // ============================================================
 // TOAST
 // ============================================================
@@ -118,7 +121,10 @@ function articleForm(data = {}) {
 
     <div class="modal-form-group">
       <label>المحتوى</label>
-      <textarea class="form-input" id="f-body" rows="8">${data.body || ''}</textarea>
+      <div id="quill-editor-container">
+        <div id="quill-editor"></div>
+      </div>
+      <input type="hidden" id="f-body" value="" />
     </div>
 
     <div class="modal-form-group">
@@ -212,6 +218,32 @@ function esc(val) {
 }
 
 // ============================================================
+// QUILL RICH EDITOR
+// ============================================================
+function initQuillEditor(content = '') {
+  quillInstance = new Quill('#quill-editor', {
+    theme: 'snow',
+    direction: 'rtl',
+    placeholder: 'اكتب محتوى المقال هنا...',
+    modules: {
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        [{ align: [] }],
+        ['link', 'blockquote'],
+        ['clean'],
+      ],
+    },
+  });
+
+  // تحميل المحتوى الموجود عند التعديل
+  if (content) {
+    quillInstance.clipboard.dangerouslyPasteHTML(content);
+  }
+}
+
+// ============================================================
 // OPEN / CLOSE MODAL
 // ============================================================
 function openModal(type, data = {}) {
@@ -219,11 +251,14 @@ function openModal(type, data = {}) {
   document.getElementById('modal-title').textContent = isEdit ? 'تعديل مقال' : 'إضافة مقال';
   document.getElementById('modal-body').innerHTML    = articleForm(data);
   document.getElementById('modal-overlay').classList.add('open');
+  // تهيئة Quill بعد ظهور الـ DOM
+  setTimeout(() => initQuillEditor(data.body || ''), 50);
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
-  state.editId = null;
+  state.editId    = null;
+  quillInstance   = null;
 }
 
 // ============================================================
@@ -269,6 +304,10 @@ async function saveArticle() {
 }
 
 function collectForm() {
+  // مزامنة محتوى Quill إلى الـ hidden input قبل الجمع
+  if (quillInstance) {
+    document.getElementById('f-body').value = quillInstance.root.innerHTML;
+  }
   const fields = document.querySelectorAll('#modal-body [id^="f-"]');
   const body   = {};
   fields.forEach(el => {

@@ -488,15 +488,54 @@ section { padding: 80px 0; }
 }
 .branch-card.hidden { display: none; }
 
-/* مقالات — انيميشن بسيط بدون GSAP ScrollTrigger */
-.branch-card.article {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.55s ease, transform 0.55s ease;
+/* ============================================================
+   ARTICLES SECTION — نفس شكل الفروع
+============================================================ */
+.articles-section {
+  background: var(--gold);
+  position: relative;
+  overflow: hidden;
+  padding: 80px 0;
 }
-.branch-card.article.visible {
+.articles-section .section-title { color: var(--black); }
+.articles-section .section-badge {
+  color: var(--black-soft);
+  border-color: rgba(0,0,0,0.2);
+  background: rgba(0,0,0,0.06);
+}
+.articles-section .title-line {
+  background: linear-gradient(to left, #000, transparent);
+}
+.articles-section .container { position: relative; z-index: 1; }
+
+/* Articles Grid — 3 أعمدة */
+.articles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .articles-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 520px) {
+  .articles-grid { grid-template-columns: 1fr; }
+}
+
+/* Article item — نفس branch-card لكن بدون GSAP animation */
+.branch-card.article-item {
+  transition:
+    opacity 0.55s ease,
+    transform 0.55s ease,
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+.branch-card.article-item.visible {
   opacity: 1;
   transform: translateY(0);
+}
+/* إظهار الـ badge للمقالات (مخفي في الفروع) */
+.branch-card.article-item .branch-city-badge {
+  display: inline-block;
 }
 
 /* Show More Button */
