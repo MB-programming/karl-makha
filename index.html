@@ -15,19 +15,29 @@
     <link rel="icon" type="image/x-icon" href="favicon.jpeg" />
     <meta name="keywords" content="مخازن العناية" />
 
-    <!-- Google Fonts -->
+    <!-- Google Fonts — أوزان ضرورية فقط -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet" />
+    </noscript>
 
-    <!-- Font Awesome -->
+    <!-- Font Awesome — تحميل غير blocking -->
     <link
-      rel="stylesheet"
+      rel="preload"
+      as="style"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    </noscript>
 
     <!-- Main CSS -->
     <link rel="stylesheet" href="assets/css/style.css" />
@@ -184,7 +194,7 @@
 ============================================================ -->
     <section id="branches" class="branches-section">
       <div class="section-pattern-accent">
-        <img src="pattern-3.webp" alt="" aria-hidden="true" />
+        <img src="pattern-3.webp" alt="" aria-hidden="true" loading="lazy" />
       </div>
 
       <div class="container">
@@ -208,7 +218,7 @@
 ============================================================ -->
     <section id="contact" class="contact-section">
       <div class="contact-bg-pattern">
-        <img src="pattern-4.webp" alt="" aria-hidden="true" />
+        <img src="pattern-4.webp" alt="" aria-hidden="true" loading="lazy" />
       </div>
       <div class="container">
         <div class="contact-card" id="contact-card">
@@ -241,7 +251,7 @@
         <div class="brands-grid" id="brands-grid"></div>
       </div>
       <div class="brands-pattern-bottom">
-        <img src="pattern-6.webp" alt="" aria-hidden="true" />
+        <img src="pattern-6.webp" alt="" aria-hidden="true" loading="lazy" />
       </div>
     </section>
 
@@ -252,9 +262,9 @@
 
     <section id="articles" class="branches-section">
       <div class="section-pattern-accent">
-        <img src="pattern-3.webp" alt="" aria-hidden="true" />
+        <img src="pattern-3.webp" alt="" aria-hidden="true" loading="lazy" />
       </div>
-    
+
       <div class="container">
         <div class="section-header">
           <!--<span class="section-badge">لأن جمالك يستحق</span>-->
@@ -329,13 +339,12 @@
       }
     </style>
 
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+    <!-- GSAP (بدون TextPlugin — غير مستخدم) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 
     <!-- Main JS -->
-    <script src="assets/js/main.js"></script>
+    <script src="assets/js/main.js" defer></script>
 
     <!-- Google Tag Manager (noscript) -->
     <noscript

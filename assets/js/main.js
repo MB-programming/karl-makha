@@ -6,14 +6,14 @@
 "use strict";
 
 // ---- GSAP Setup ----
-gsap.registerPlugin(ScrollTrigger, TextPlugin);
+gsap.registerPlugin(ScrollTrigger);
 
 // ============================================================
 // FLOATING PARTICLES
 // ============================================================
 function initParticles() {
   const container = document.getElementById('hero-particles');
-  const count = window.innerWidth < 600 ? 20 : 40;
+  const count = window.innerWidth < 600 ? 12 : 25;
 
   for (let i = 0; i < count; i++) {
     const dot = document.createElement('div');
@@ -630,6 +630,19 @@ function renderArticles(articles) {
     `;
     grid.appendChild(card);
   });
+
+  // ---- ظهور الكروت بـ IntersectionObserver ----
+  if (articles.length) {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    grid.querySelectorAll('.branch-card.article').forEach(c => io.observe(c));
+  }
 
 //   // ---- منطق عرض المزيد ----
 //   const STEP = 5;
