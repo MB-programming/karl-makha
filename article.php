@@ -188,10 +188,23 @@ a { text-decoration:none; color:#007bff; }
   const params = new URLSearchParams(window.location.search);
   const slug = params.get('slug');
 
+  if (!slug) {
+    document.getElementById('hero-title').textContent = 'رابط غير صحيح';
+    document.getElementById('hero-excerpt').textContent = 'لم يتم تحديد مقال';
+    return;
+  }
+
   fetch('/api/articles_api.php?slug=' + encodeURIComponent(slug))
     .then(r => r.json())
     .then(d => {
-      if (!d.success || !d.data) return;
+      if (!d.success || !d.data) {
+        document.getElementById('hero-title').textContent = 'تعذّر تحميل المقال';
+        document.getElementById('hero-excerpt').textContent = d.message || 'حدث خطأ';
+        document.getElementById('article-body').innerHTML =
+          '<p style="text-align:center;color:#c00;padding:40px 0;font-size:18px">' +
+          (d.message || 'المقال غير موجود') + '</p>';
+        return;
+      }
       const article = d.data;
 
       document.getElementById('hero-title').textContent   = article.title   || '';
