@@ -175,7 +175,7 @@ function animateBranches() {
     trigger: '.branches-section',
     start: 'top 75%',
     onEnter: () => {
-      gsap.to('.branch-card:not(.hidden)', {
+      gsap.to('.branches-section .branch-card:not(.hidden)', {
         opacity: 1,
         y: 0,
         stagger: 0.06,
@@ -601,53 +601,50 @@ function renderArticles(articles) {
   const grid = document.getElementById('articles-grid');
   grid.innerHTML = '';
 
-  // إخفاء القسم إذا لا توجد مقالات
   if (!articles || !articles.length) {
     document.getElementById('articles').style.display = 'none';
     return;
   }
 
   articles.forEach(article => {
-    const card = document.createElement('a');
-    card.className = 'article-card';
-    card.href      = `article.php?slug=${article.slug}`;
+    const card = document.createElement('div');
+    card.className = 'branch-card article-item';
 
-    const imgHtml = article.cover_image
-      ? `<div class="article-card-img">
-           <img src="${article.cover_image}" alt="${article.title}" loading="lazy" />
-         </div>`
-      : `<div class="article-card-img-placeholder">
-           <i class="fas fa-newspaper"></i>
-         </div>`;
+    const badgeHtml = article.category
+      ? `<span class="branch-city-badge">${article.category}</span>`
+      : '';
 
     const excerptHtml = article.excerpt
-      ? `<p class="article-card-excerpt">${article.excerpt}</p>`
+      ? `<div class="branch-address"><span>${article.excerpt}</span></div>`
       : '';
 
     card.innerHTML = `
-      ${imgHtml}
-      <div class="article-card-body">
-        <h3 class="article-card-title">${article.title}</h3>
-        ${excerptHtml}
-        <span class="article-read-btn">
+      <div class="branch-top">
+        <div class="branch-name">${article.title}</div>
+        ${badgeHtml}
+      </div>
+      ${excerptHtml}
+      <div class="branch-footer">
+        <span></span>
+        <a href="article.php?slug=${article.slug}" class="branch-map-btn">
           قراءة المزيد <i class="fas fa-arrow-left"></i>
-        </span>
+        </a>
       </div>`;
 
     grid.appendChild(card);
   });
 
-  // ظهور الكروت بـ IntersectionObserver
+  // ظهور تدريجي بـ IntersectionObserver (بدون GSAP)
   const io = new IntersectionObserver((entries, obs) => {
     entries.forEach((entry, i) => {
       if (entry.isIntersecting) {
-        setTimeout(() => entry.target.classList.add('visible'), i * 90);
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
         obs.unobserve(entry.target);
       }
     });
   }, { threshold: 0.08 });
 
-  grid.querySelectorAll('.article-card').forEach(c => io.observe(c));
+  grid.querySelectorAll('.branch-card.article-item').forEach(c => io.observe(c));
 }
 
 // ============================================================
