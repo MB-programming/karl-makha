@@ -60,21 +60,12 @@ if ($method === 'GET' && !$admin && !$id && !$slug) {
 // GET PUBLIC — مقال واحد بالـ slug
 // ============================================================
 if ($method === 'GET' && !$admin && $slug) {
-    $stmt = $db->prepare("SELECT * FROM articles WHERE slug = ? AND is_active = 1 LIMIT 1");
+    $stmt = $db->prepare("SELECT * FROM articles WHERE slug = ? LIMIT 1");
     $stmt->execute([$slug]);
     $row = $stmt->fetch();
     if (!$row) {
-        // تحقق هل المقال موجود بس معطل (للتشخيص)
-        $chk = $db->prepare("SELECT id, is_active FROM articles WHERE slug = ? LIMIT 1");
-        $chk->execute([$slug]);
-        $exists = $chk->fetch();
-        if ($exists) {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'المقال معطل — فعّله من لوحة التحكم'], JSON_UNESCAPED_UNICODE);
-        } else {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'المقال غير موجود', 'slug_searched' => $slug], JSON_UNESCAPED_UNICODE);
-        }
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'المقال غير موجود'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -89,7 +80,7 @@ if ($method === 'GET' && !$admin && $slug) {
 // GET PUBLIC — مقال واحد بالـ id
 // ============================================================
 if ($method === 'GET' && !$admin && $id) {
-    $stmt = $db->prepare("SELECT * FROM articles WHERE id = ? AND is_active = 1 LIMIT 1");
+    $stmt = $db->prepare("SELECT * FROM articles WHERE id = ? LIMIT 1");
     $stmt->execute([$id]);
     $row = $stmt->fetch();
     if (!$row) { http_response_code(404); echo json_encode(['success' => false, 'message' => 'المقال غير موجود']); exit; }
