@@ -1,6 +1,8 @@
 <?php
 // ================================================
-// Brand Logo Upload
+// Image Upload — تحويل تلقائي إلى WebP
+// type=logo  → assets/brands/
+// type=cover → assets/articles/
 // ================================================
 require_once __DIR__ . '/config.php';
 requireAuth();
@@ -13,30 +15,63 @@ if (empty($_FILES['logo'])) {
     jsonResponse(['success' => false, 'message' => 'No file uploaded'], 400);
 }
 
-$file      = $_FILES['logo'];
-$allowed   = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-$maxSize   = 2 * 1024 * 1024; // 2MB
-$uploadDir = __DIR__ . '/../assets/brands/';
+$file    = $_FILES['logo'];
+$type    = clean($_GET['type'] ?? 'logo'); // logo | cover
+$allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+$maxSize = 5 * 1024 * 1024; // 5MB
 
 if (!in_array($file['type'], $allowed)) {
-    jsonResponse(['success' => false, 'message' => 'نوع الملف غير مدعوم. يُسمح بـ JPG, PNG, WebP, GIF, SVG فقط'], 400);
+    jsonResponse(['success' => false, 'message' => 'نوع الملف غير مدعوم. يُسمح بـ JPG, PNG, WebP فقط'], 400);
 }
 
 if ($file['size'] > $maxSize) {
-    jsonResponse(['success' => false, 'message' => 'حجم الملف يتجاوز 2MB'], 400);
+    jsonResponse(['success' => false, 'message' => 'حجم الملف يتجاوز 5MB'], 400);
 }
 
-$ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-$filename = 'brand_' . uniqid() . '.' . strtolower($ext);
-$destPath = $uploadDir . $filename;
+// تحديد المجلد حسب النوع
+if ($type === 'cover') {
+    $uploadDir = __DIR__ . '/../assets/articles/';
+    $urlPrefix = 'assets/articles/';
+    $prefix    = 'cover_';
+} else {
+    $uploadDir = __DIR__ . '/../assets/brands/';
+    $urlPrefix = 'assets/brands/';
+    $prefix    = 'brand_';
+}
 
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-if (!move_uploaded_file($file['tmp_name'], $destPath)) {
-    jsonResponse(['success' => false, 'message' => 'فشل رفع الملف'], 500);
+// اسم الملف الجديد بصيغة WebP
+$filename = $prefix . uniqid() . '.webp';
+$destPath = $uploadDir . $filename;
+
+// تحويل الصورة إلى WebP بـ GD
+$src = null;
+switch ($file['type']) {
+    case 'image/jpeg': $src = imagecreatefromjpeg($file['tmp_name']); break;
+    case 'image/png':
+        $src = imagecreatefrompng($file['tmp_name']);
+        // الحفاظ على الشفافية
+        imagealphablending($src, true);
+        imagesavealpha($src, true);
+        break;
+    case 'image/webp': $src = imagecreatefromwebp($file['tmp_name']); break;
+    case 'image/gif':  $src = imagecreatefromgif($file['tmp_name']);  break;
 }
 
-$publicUrl = 'assets/brands/' . $filename;
+if (!$src) {
+    jsonResponse(['success' => false, 'message' => 'فشل قراءة الصورة'], 500);
+}
+
+// جودة WebP: 85 (توازن جيد بين الجودة والحجم)
+$ok = imagewebp($src, $destPath, 85);
+imagedestroy($src);
+
+if (!$ok) {
+    jsonResponse(['success' => false, 'message' => 'فشل تحويل الصورة إلى WebP'], 500);
+}
+
+$publicUrl = $urlPrefix . $filename;
 jsonResponse(['success' => true, 'url' => $publicUrl, 'message' => 'تم رفع الصورة بنجاح']);

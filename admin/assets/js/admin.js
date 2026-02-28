@@ -918,9 +918,11 @@ async function previewAndUpload(input) {
   // Upload to server
   const formData = new FormData();
   formData.append('logo', file);
+  const isArticleCover = !!document.getElementById('f-cover_image');
+  const uploadType     = isArticleCover ? 'cover' : 'logo';
 
   try {
-    const res  = await fetch('../api/upload.php', { method: 'POST', body: formData });
+    const res  = await fetch(`../api/upload.php?type=${uploadType}`, { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
       const urlField = document.getElementById('f-cover_image') || document.getElementById('f-logo_url');
