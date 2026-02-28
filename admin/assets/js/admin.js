@@ -923,7 +923,8 @@ async function previewAndUpload(input) {
     const res  = await fetch('../api/upload.php', { method: 'POST', body: formData });
     const data = await res.json();
     if (data.success) {
-      document.getElementById('f-logo_url').value = data.url;
+      const urlField = document.getElementById('f-cover_image') || document.getElementById('f-logo_url');
+      if (urlField) urlField.value = data.url;
       // Update preview to show success
       const preview = document.getElementById('upload-preview');
       preview.innerHTML = `
@@ -931,7 +932,7 @@ async function previewAndUpload(input) {
           <img src="../${data.url}" alt="preview" />
           <span class="uploading-badge success"><i class="fas fa-check"></i> تم الرفع</span>
         </div>`;
-      showToast('تم رفع الشعار بنجاح', 'success');
+      showToast('تم الرفع بنجاح', 'success');
     } else {
       showToast(data.message || 'فشل رفع الشعار', 'error');
       resetUploadArea();

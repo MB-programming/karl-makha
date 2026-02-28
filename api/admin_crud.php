@@ -98,6 +98,50 @@ if ($method === 'POST') {
                 'sort_order' => intval($body['sort_order'] ?? 0),
             ]);
             break;
+
+        case 'articles':
+            // توليد slug تلقائي
+            $slug = trim($body['slug'] ?? '');
+            if (empty($slug)) {
+                $slug = mb_strtolower(trim($body['title'] ?? ''));
+            }
+            $slug = preg_replace('/\s+/', '-', $slug);
+            $slug = preg_replace('/[^\p{Arabic}a-z0-9\-]/u', '', $slug);
+            $slug = trim(preg_replace('/-+/', '-', $slug), '-');
+            if (empty($slug)) $slug = 'article-' . time();
+            // تفرّد الـ slug
+            $base = $slug; $suffix = 1;
+            while (true) {
+                $chk = $db->prepare("SELECT id FROM articles WHERE slug = ?");
+                $chk->execute([$slug]);
+                if (!$chk->fetch()) break;
+                $slug = $base . '-' . $suffix++;
+            }
+            $stmt = $db->prepare("INSERT INTO articles
+                (title, slug, excerpt, body, cover_image, category, tags,
+                 seo_title, seo_description, author_name,
+                 is_active, is_featured, sort_order, published_at)
+                VALUES
+                (:title,:slug,:excerpt,:body,:cover_image,:category,:tags,
+                 :seo_title,:seo_description,:author_name,
+                 :is_active,:is_featured,:sort_order,:published_at)");
+            $stmt->execute([
+                'title'           => clean($body['title']           ?? ''),
+                'slug'            => $slug,
+                'excerpt'         => clean($body['excerpt']         ?? ''),
+                'body'            => $body['body']                  ?? '',
+                'cover_image'     => clean($body['cover_image']     ?? ''),
+                'category'        => clean($body['category']        ?? ''),
+                'tags'            => clean($body['tags']            ?? ''),
+                'seo_title'       => clean($body['seo_title']       ?? ''),
+                'seo_description' => clean($body['seo_description'] ?? ''),
+                'author_name'     => clean($body['author_name']     ?? 'مخازن العناية'),
+                'is_active'       => intval($body['is_active']      ?? 1),
+                'is_featured'     => intval($body['is_featured']    ?? 0),
+                'sort_order'      => intval($body['sort_order']     ?? 0),
+                'published_at'    => !empty($body['published_at']) ? $body['published_at'] : date('Y-m-d H:i:s'),
+            ]);
+            break;
     }
     jsonResponse(['success' => true, 'message' => 'تم الإضافة بنجاح', 'id' => $db->lastInsertId()]);
 }
@@ -168,6 +212,33 @@ if ($method === 'PUT' && $id) {
                 'is_active'  => intval($body['is_active'] ?? 1),
                 'sort_order' => intval($body['sort_order'] ?? 0),
                 'id'         => $id,
+            ]);
+            break;
+
+        case 'articles':
+            $stmt = $db->prepare("UPDATE articles SET
+                title=:title, excerpt=:excerpt, body=:body,
+                cover_image=:cover_image, category=:category, tags=:tags,
+                seo_title=:seo_title, seo_description=:seo_description,
+                author_name=:author_name,
+                is_active=:is_active, is_featured=:is_featured,
+                sort_order=:sort_order, published_at=:published_at
+                WHERE id=:id");
+            $stmt->execute([
+                'title'           => clean($body['title']           ?? ''),
+                'excerpt'         => clean($body['excerpt']         ?? ''),
+                'body'            => $body['body']                  ?? '',
+                'cover_image'     => clean($body['cover_image']     ?? ''),
+                'category'        => clean($body['category']        ?? ''),
+                'tags'            => clean($body['tags']            ?? ''),
+                'seo_title'       => clean($body['seo_title']       ?? ''),
+                'seo_description' => clean($body['seo_description'] ?? ''),
+                'author_name'     => clean($body['author_name']     ?? 'مخازن العناية'),
+                'is_active'       => intval($body['is_active']      ?? 1),
+                'is_featured'     => intval($body['is_featured']    ?? 0),
+                'sort_order'      => intval($body['sort_order']     ?? 0),
+                'published_at'    => !empty($body['published_at']) ? $body['published_at'] : date('Y-m-d H:i:s'),
+                'id'              => $id,
             ]);
             break;
     }
