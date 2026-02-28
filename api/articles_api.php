@@ -4,7 +4,7 @@
 // GET  public  → قائمة المقالات / مقال واحد
 // CRUD admin   → إضافة / تعديل / حذف
 // ============================================================
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/articles_config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
