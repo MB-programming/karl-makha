@@ -71,6 +71,7 @@ function renderArticles(rows) {
       <td style="font-size:12px">${row.published_at ? row.published_at.substring(0,10) : '-'}</td>
       <td>
         <div class="actions">
+          <a  class="btn-icon" title="معاينة"            href="../article.php?slug=${row.slug}" target="_blank"><i class="fas fa-eye"></i></a>
           <button class="btn-icon" title="تعديل"         onclick="editArticle(${row.id})"><i class="fas fa-edit"></i></button>
           <button class="btn-icon" title="تفعيل/تعطيل"  onclick="toggleArticle(${row.id})"><i class="fas fa-toggle-on"></i></button>
           <button class="btn-icon del" title="حذف"       onclick="confirmDelete(${row.id})"><i class="fas fa-trash"></i></button>
