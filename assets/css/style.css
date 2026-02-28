@@ -488,6 +488,17 @@ section { padding: 80px 0; }
 }
 .branch-card.hidden { display: none; }
 
+/* مقالات — انيميشن بسيط بدون GSAP ScrollTrigger */
+.branch-card.article {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.branch-card.article.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* Show More Button */
 .show-more-btn {
   display: flex;

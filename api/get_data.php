@@ -6,6 +6,8 @@ require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
+header('Cache-Control: public, max-age=300'); // 5 دقائق كاش
+header('Vary: Accept-Encoding');
 
 $db = getDB();
 
