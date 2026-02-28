@@ -598,123 +598,56 @@ function renderBrands(brands) {
 }
 
 function renderArticles(articles) {
-    const grid       = document.getElementById('articles-grid');
-    grid.innerHTML   = '';
+  const grid = document.getElementById('articles-grid');
+  grid.innerHTML = '';
 
-  // ---- رسم كروت الفروع ----
+  // إخفاء القسم إذا لا توجد مقالات
+  if (!articles || !articles.length) {
+    document.getElementById('articles').style.display = 'none';
+    return;
+  }
+
   articles.forEach(article => {
-    const card = document.createElement('div');
-    card.className    = 'branch-card article';
+    const card = document.createElement('a');
+    card.className = 'article-card';
+    card.href      = `article.php?slug=${article.slug}`;
 
-    // const author_name = article.author_name ? `
-    //   <div class="article-phone">
-    //     ${article.author_name}
-    //   </div>` : '';
+    const imgHtml = article.cover_image
+      ? `<div class="article-card-img">
+           <img src="${article.cover_image}" alt="${article.title}" loading="lazy" />
+         </div>`
+      : `<div class="article-card-img-placeholder">
+           <i class="fas fa-newspaper"></i>
+         </div>`;
 
-    const mapBtn = article.slug ? `
-      <a href="/article.php?slug=${article.slug}" rel="noopener" class="branch-map-btn">
-        <i class="fas fa-arrow-right"></i> عرض المزيد
-      </a>` : '';
+    const excerptHtml = article.excerpt
+      ? `<p class="article-card-excerpt">${article.excerpt}</p>`
+      : '';
 
     card.innerHTML = `
-      <div class="branch-top">
-        <div class="branch-name">${article.title}</div>
-      </div>
-      <div class="branch-address">
-        <span>${article.excerpt || ''}</span>
-      </div>
-      <div class="branch-footer">
-        ${article.author_name}
-        ${mapBtn}
-      </div>
-    `;
+      ${imgHtml}
+      <div class="article-card-body">
+        <h3 class="article-card-title">${article.title}</h3>
+        ${excerptHtml}
+        <span class="article-read-btn">
+          قراءة المزيد <i class="fas fa-arrow-left"></i>
+        </span>
+      </div>`;
+
     grid.appendChild(card);
   });
 
-  // ---- ظهور الكروت بـ IntersectionObserver ----
-  if (articles.length) {
-    const io = new IntersectionObserver((entries, obs) => {
-      entries.forEach((entry, i) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => entry.target.classList.add('visible'), i * 80);
-          obs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.1 });
-    grid.querySelectorAll('.branch-card.article').forEach(c => io.observe(c));
-  }
+  // ظهور الكروت بـ IntersectionObserver
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 90);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
 
-//   // ---- منطق عرض المزيد ----
-//   const STEP = 5;
-//   let visibleCount = STEP;
-
-//   function applyVisibility(filterCity) {
-//     const allCards = [...grid.querySelectorAll('.branch-cardarticle-car
-//     const filtered = allCards.filter(c =>
-//       filterCity === 'all' || c.dataset.city === filterCity
-//     );
-
-//     // إخفاء الكل أولاً
-//     allCards.forEach(c => c.classList.add('hidden'));
-
-//     // إظهار بقدر visibleCount
-//     filtered.forEach((c, i) => {
-//       if (i < visibleCount) c.classList.remove('hidden');
-//     });
-
-//     // زرار عرض المزيد
-//     let showMoreBtn = document.getElementById('show-more-branches');
-
-//     if (filtered.length > visibleCount) {
-//       if (!showMoreBtn) {
-//         showMoreBtn = document.createElement('button');
-//         showMoreBtn.id        = 'show-more-branches';
-//         showMoreBtn.className = 'show-more-btn';
-//         showMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> عرض المزيد';
-//         grid.parentElement.appendChild(showMoreBtn);
-
-//         showMoreBtn.addEventListener('click', () => {
-//           visibleCount += STEP;
-//           const activeCity = filterWrap.querySelector('.city-btn.active')?.dataset.city || 'all';
-//           applyVisibility(activeCity);
-
-//           // أنيميشن للكروت الجديدة
-//           gsap.fromTo(
-//             grid.querySelectorAll('.branch-card:not(.hidden)'),
-//             { opacity: 0, y: 20 },
-//             { opacity: 1, y: 0, stagger: 0.05, duration: 0.5, ease: 'power3.out' }
-//           );
-//         });
-//       }
-//       showMoreBtn.style.display = 'flex';
-//     } else {
-//       if (showMoreBtn) showMoreBtn.style.display = 'none';
-//     }
-//   }
-
-//   // تطبيق الأولي
-//   applyVisibility('all');
-
-//   // ---- فلتر المدن ----
-//   filterWrap.addEventListener('click', (e) => {
-//     const btn = e.target.closest('.city-btn');
-//     if (!btn) return;
-
-//     filterWrap.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
-//     btn.classList.add('active');
-
-//     visibleCount = STEP; // إعادة ضبط العداد
-//     const selectedCity = btn.dataset.city;
-//     applyVisibility(selectedCity);
-
-//     gsap.fromTo(
-//       grid.querySelectorAll('.branch-card:not(.hidden)'),
-//       { opacity: 0, y: 20 },
-//       { opacity: 1, y: 0, stagger: 0.05, duration: 0.5, ease: 'power3.out' }
-//     );
-//   });
-
-//   animateBranches();
+  grid.querySelectorAll('.article-card').forEach(c => io.observe(c));
 }
 
 // ============================================================

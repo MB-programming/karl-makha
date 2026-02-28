@@ -17,7 +17,25 @@ $branches = $db->query("
     FROM branches WHERE is_active = 1 ORDER BY sort_order ASC, city_ar ASC
 ")->fetchAll();
 
-$articles = $db->query("SELECT * FROM articles WHERE is_active = 1 ORDER BY sort_order ASC")->fetchAll();
+// Articles — من قاعدة البيانات المنفصلة
+$articles = [];
+try {
+    $artPDO = new PDO(
+        'mysql:host=localhost;dbname=makhazenalenaya_articlesdb;charset=utf8mb4',
+        'makhazenalenaya_makhazenalenaya',
+        'ZG[pJe%b2+!j',
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+    );
+    $articles = $artPDO->query("
+        SELECT id, title, slug, excerpt, cover_image, category, author_name, published_at, is_featured
+        FROM articles
+        WHERE is_active = 1
+        ORDER BY is_featured DESC, sort_order ASC, created_at DESC
+        LIMIT 12
+    ")->fetchAll();
+} catch (Exception $e) {
+    $articles = [];
+}
 
 // Branch working hours — كل الأوقات دفعة واحدة ثم نربطها في PHP
 $hours_rows = $db->query("
