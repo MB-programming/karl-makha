@@ -236,7 +236,7 @@ function animateBrands() {
 // ============================================================
 // RENDER SOCIAL CARDS — يستخدم اللون من لوحة التحكم (DB)
 // ============================================================
-function renderSocial(items) {
+function renderSocial(items, useGSAP = true) {
   const grid = document.getElementById('social-grid');
   grid.innerHTML = '';
 
@@ -308,7 +308,7 @@ function renderSocial(items) {
     grid.appendChild(card);
   });
 
-  animateSocial();
+  if (useGSAP) animateSocial();
 }
 
 // ============================================================
@@ -366,7 +366,7 @@ function buildHoursHtml(hours) {
 // ============================================================
 // RENDER BRANCHES  (مع عرض 5 في البداية + زرار عرض المزيد)
 // ============================================================
-function renderBranches(branches) {
+function renderBranches(branches, useGSAP = true) {
   const grid       = document.getElementById('branches-grid');
   const filterWrap = document.getElementById('city-filter');
   grid.innerHTML   = '';
@@ -515,13 +515,13 @@ function renderBranches(branches) {
     );
   });
 
-  animateBranches();
+  if (useGSAP) animateBranches();
 }
 
 // ============================================================
 // RENDER CONTACT
 // ============================================================
-function renderContact(items) {
+function renderContact(items, useGSAP = true) {
   const phonesWrap  = document.getElementById('contact-phones');
   const actionsWrap = document.getElementById('contact-actions');
   phonesWrap.innerHTML  = '';
@@ -557,13 +557,13 @@ function renderContact(items) {
       </a>`;
   }
 
-  animateContact();
+  if (useGSAP) animateContact();
 }
 
 // ============================================================
 // RENDER BRANDS
 // ============================================================
-function renderBrands(brands) {
+function renderBrands(brands, useGSAP = true) {
   const grid = document.getElementById('brands-grid');
   grid.innerHTML = '';
 
@@ -594,7 +594,7 @@ function renderBrands(brands) {
     grid.appendChild(card);
   });
 
-  animateBrands();
+  if (useGSAP) animateBrands();
 }
 
 function renderArticles(articles) {
@@ -732,36 +732,34 @@ function initCatSlider(total, perView, autoplay, speed) {
   const nextBtn = document.getElementById('cat-next');
   if (!track || !prevBtn || !nextBtn) return;
 
-  let idx  = 0;
-  let timer = null;
+  let idx      = 0;
+  let timer    = null;
+  const canLoop = total > perView;
 
   function cardWidth() {
     const card = track.children[0];
-    if (!card) return 176;
-    return card.offsetWidth + 16; // 16 = gap
+    return card ? card.offsetWidth + 16 : 176;
   }
 
-  function maxIdx() {
-    return Math.max(0, total - perView);
-  }
+  function maxIdx() { return Math.max(0, total - perView); }
 
   function goTo(i) {
-    idx = Math.min(Math.max(i, 0), maxIdx());
-    track.style.transform = `translateX(${idx * cardWidth()}px)`;
-    // In LTR track: translateX positive shifts right (shows earlier items)
-    // arrow logic: prev = idx-- , next = idx++
-    prevBtn.disabled = idx <= 0;
-    nextBtn.disabled = idx >= maxIdx();
+    const m = maxIdx();
+    // infinite loop wrapping
+    idx = canLoop
+      ? ((i % (m + 1)) + (m + 1)) % (m + 1)
+      : Math.min(Math.max(i, 0), m);
+    track.style.transform  = `translateX(${idx * cardWidth()}px)`;
+    prevBtn.disabled = !canLoop && idx <= 0;
+    nextBtn.disabled = !canLoop && idx >= m;
   }
 
   prevBtn.addEventListener('click', () => goTo(idx - 1));
   nextBtn.addEventListener('click', () => goTo(idx + 1));
 
   function startAuto() {
-    if (!autoplay || total <= perView) return;
-    timer = setInterval(() => {
-      goTo(idx >= maxIdx() ? 0 : idx + 1);
-    }, speed);
+    if (!autoplay || !canLoop) return;
+    timer = setInterval(() => goTo(idx + 1), speed);
   }
 
   const outer = track.parentElement;
@@ -783,11 +781,16 @@ async function loadData() {
     const data = await res.json();
 
     if (data.success) {
-      renderSocial(data.social || []);
-      renderBranches(data.branches || []);
-      renderContact(data.contact || []);
-      renderCategories(data.categories || [], data.settings || {});
-      renderBrands(data.brands || []);
+      const s = data.settings || {};
+      // GSAP toggle: '0' = CSS-only mode
+      const useGSAP = s.perf_animations !== '0';
+      if (!useGSAP) document.body.classList.add('css-anim');
+
+      renderSocial(data.social || [], useGSAP);
+      renderBranches(data.branches || [], useGSAP);
+      renderContact(data.contact || [], useGSAP);
+      renderCategories(data.categories || [], s);
+      renderBrands(data.brands || [], useGSAP);
       renderArticles(data.articles || []);
     } else {
       console.warn('API returned error, using fallback');

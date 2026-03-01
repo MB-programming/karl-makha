@@ -47,6 +47,10 @@
       <span>الأقسام</span>
       <span class="nav-badge" id="badge-categories">0</span>
     </button>
+    <button class="nav-item" data-tab="performance">
+      <i class="fas fa-tachometer-alt"></i>
+      <span>الأداء</span>
+    </button>
     <button class="nav-item" data-tab="tracking">
       <i class="fab fa-google"></i>
       <span>كودات التتبع</span>
@@ -266,6 +270,73 @@
         <button class="btn-add" style="margin-top:12px" onclick="saveSliderSettings()">
           <i class="fas fa-save"></i> حفظ إعدادات السلايدر
         </button>
+      </div>
+    </div>
+
+    <!-- ======= PERFORMANCE TAB ======= -->
+    <div id="tab-performance" class="tab-content">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h2 class="tab-title">إعدادات الأداء والسرعة</h2>
+        </div>
+        <button class="btn-add" onclick="savePerfSettings()">
+          <i class="fas fa-save"></i> حفظ الإعدادات
+        </button>
+      </div>
+
+      <div class="perf-grid">
+
+        <!-- تأثيرات GSAP -->
+        <div class="perf-card">
+          <div class="perf-card-icon" style="color:#FFCF06"><i class="fas fa-magic"></i></div>
+          <div class="perf-card-body">
+            <h3>تأثيرات الأنيميشن</h3>
+            <p>GSAP يوفر تأثيرات سلسة ومتطورة. تعطيله يستبدلها بـ CSS فقط ويُحسّن الأداء على الأجهزة الضعيفة.</p>
+            <select class="form-input" id="perf_animations" style="margin-top:10px">
+              <option value="1">GSAP — تأثيرات غنية</option>
+              <option value="0">CSS فقط — أسرع وأخف</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- كاش API -->
+        <div class="perf-card">
+          <div class="perf-card-icon" style="color:#4CAF50"><i class="fas fa-server"></i></div>
+          <div class="perf-card-body">
+            <h3>كاش الـ API</h3>
+            <p>إضافة ترويسات <code>Cache-Control: max-age=300</code> تخلّي المتصفح والـ CDN يحتفظون بالبيانات 5 دقائق.</p>
+            <select class="form-input" id="perf_cache_api" style="margin-top:10px">
+              <option value="1">مفعّل (5 دقائق)</option>
+              <option value="0">معطّل (بدون كاش)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ضغط HTML -->
+        <div class="perf-card">
+          <div class="perf-card-icon" style="color:#2196F3"><i class="fas fa-compress-alt"></i></div>
+          <div class="perf-card-body">
+            <h3>ضغط HTML</h3>
+            <p>إزالة المسافات الزائدة من الصفحات الديناميكية مثل <code>category.php</code> يُقلّل حجم الاستجابة.</p>
+            <select class="form-input" id="perf_minify_html" style="margin-top:10px">
+              <option value="1">مفعّل</option>
+              <option value="0">معطّل</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- OPcache -->
+        <div class="perf-card">
+          <div class="perf-card-icon" style="color:#FF9800"><i class="fas fa-bolt"></i></div>
+          <div class="perf-card-body">
+            <h3>PHP OPcache</h3>
+            <p>يُسرّع تنفيذ ملفات PHP بتخزينها مُجمَّعة مسبقاً. يُمسح عند الضغط على "مسح الكاش" في أسفل الشريط الجانبي.</p>
+            <div id="opcache-status" style="margin-top:10px">
+              <span style="color:#aaa;font-size:12px">جارٍ التحقق...</span>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

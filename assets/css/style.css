@@ -1035,3 +1035,50 @@ section#hero { padding: 65px 0px 0px 0; }
         justify-content: center;
     }
 }
+/* ============================================================
+   CSS-ONLY ANIMATION MODE  (body.css-anim)
+   يتفعّل عند تعطيل GSAP من لوحة التحكم
+============================================================ */
+
+/* إظهار كل العناصر المخفية فوراً */
+body.css-anim .site-header          { transform: translateY(0) !important; opacity: 1 !important; }
+body.css-anim .hero-pattern-top,
+body.css-anim .hero-pattern-bottom,
+body.css-anim #hero-logo,
+body.css-anim .hero-tagline,
+body.css-anim .hero-stats,
+body.css-anim #scroll-hint         { opacity: 1 !important; transform: none !important; }
+body.css-anim .social-card         { opacity: 1 !important; transform: none !important; }
+body.css-anim .branch-card         { opacity: 1 !important; transform: none !important; }
+body.css-anim .contact-card        { opacity: 1 !important; transform: none !important; }
+body.css-anim .brand-card          { opacity: 1 !important; transform: none !important; }
+body.css-anim .section-header      { opacity: 1 !important; transform: none !important; }
+
+/* تأثير fade-up بسيط عبر CSS */
+@keyframes css-fade-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes css-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+body.css-anim .social-card {
+  animation: css-fade-up 0.5s ease both;
+}
+body.css-anim .social-card:nth-child(1) { animation-delay: 0.05s; }
+body.css-anim .social-card:nth-child(2) { animation-delay: 0.10s; }
+body.css-anim .social-card:nth-child(3) { animation-delay: 0.15s; }
+body.css-anim .social-card:nth-child(4) { animation-delay: 0.20s; }
+body.css-anim .social-card:nth-child(5) { animation-delay: 0.25s; }
+
+body.css-anim .branch-card {
+  animation: css-fade-up 0.4s ease both;
+}
+body.css-anim .brand-card {
+  animation: css-fade-in 0.4s ease both;
+}
+body.css-anim .contact-card {
+  animation: css-fade-up 0.6s ease both;
+}
