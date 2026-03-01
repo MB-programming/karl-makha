@@ -11,7 +11,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $table  = clean($_GET['table'] ?? '');
 $id     = intval($_GET['id'] ?? 0);
 
-$allowed_tables = ['branches', 'brands', 'articles', 'social_media', 'contact_info'];
+$allowed_tables = ['branches', 'brands', 'articles', 'social_media', 'contact_info', 'categories'];
 if (!in_array($table, $allowed_tables)) {
     jsonResponse(['success' => false, 'message' => 'Invalid table'], 400);
 }
@@ -96,6 +96,20 @@ if ($method === 'POST') {
                 'label_ar'   => clean($body['label_ar'] ?? ''),
                 'is_active'  => intval($body['is_active'] ?? 1),
                 'sort_order' => intval($body['sort_order'] ?? 0),
+            ]);
+            break;
+
+        case 'categories':
+            $stmt = $db->prepare("INSERT INTO categories (name_ar, slug, icon, description, body, is_active, sort_order)
+                                  VALUES (:name_ar,:slug,:icon,:description,:body,:is_active,:sort_order)");
+            $stmt->execute([
+                'name_ar'     => clean($body['name_ar']     ?? ''),
+                'slug'        => clean($body['slug']        ?? ''),
+                'icon'        => clean($body['icon']        ?? 'fa-star'),
+                'description' => clean($body['description'] ?? ''),
+                'body'        => $body['body']              ?? '',
+                'is_active'   => intval($body['is_active']  ?? 1),
+                'sort_order'  => intval($body['sort_order'] ?? 0),
             ]);
             break;
 
@@ -212,6 +226,21 @@ if ($method === 'PUT' && $id) {
                 'is_active'  => intval($body['is_active'] ?? 1),
                 'sort_order' => intval($body['sort_order'] ?? 0),
                 'id'         => $id,
+            ]);
+            break;
+
+        case 'categories':
+            $stmt = $db->prepare("UPDATE categories SET name_ar=:name_ar, slug=:slug, icon=:icon,
+                                  description=:description, body=:body, is_active=:is_active, sort_order=:sort_order WHERE id=:id");
+            $stmt->execute([
+                'name_ar'     => clean($body['name_ar']     ?? ''),
+                'slug'        => clean($body['slug']        ?? ''),
+                'icon'        => clean($body['icon']        ?? 'fa-star'),
+                'description' => clean($body['description'] ?? ''),
+                'body'        => $body['body']              ?? '',
+                'is_active'   => intval($body['is_active']  ?? 1),
+                'sort_order'  => intval($body['sort_order'] ?? 0),
+                'id'          => $id,
             ]);
             break;
 

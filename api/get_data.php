@@ -64,6 +64,12 @@ foreach ($branches as &$branch) {
 }
 unset($branch);
 
+// Categories
+$categories = $db->query("
+    SELECT id, name_ar, slug, icon, description
+    FROM categories WHERE is_active = 1 ORDER BY sort_order ASC, id ASC
+")->fetchAll();
+
 // Brands
 $brands = $db->query("
     SELECT id, name_ar, name_en, logo_url, website_url, sort_order
@@ -83,10 +89,11 @@ $contact = $db->query("
 ")->fetchAll();
 
 echo json_encode([
-    'success'  => true,
-    'branches' => $branches,
-    'brands'   => $brands,
+    'success'    => true,
+    'branches'   => $branches,
+    'brands'     => $brands,
+    'categories' => $categories,
     'articles'   => $articles,
-    'social'   => $social,
-    'contact'  => $contact,
+    'social'     => $social,
+    'contact'    => $contact,
 ], JSON_UNESCAPED_UNICODE);
