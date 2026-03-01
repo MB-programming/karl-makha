@@ -36,13 +36,19 @@ if ($method === 'POST') {
                           VALUES (:key, :value, :label_ar)
                           ON DUPLICATE KEY UPDATE value = :value2");
 
+    $labels = [
+        'header_code'     => 'كود الهيدر',
+        'body_code'       => 'كود البودي',
+        'slider_per_view' => 'عدد بطاقات السلايدر',
+        'slider_autoplay' => 'تشغيل تلقائي للسلايدر',
+        'slider_speed'    => 'سرعة السلايدر (مللي ثانية)',
+    ];
     foreach ($body as $key => $value) {
-        $allowed = ['header_code', 'body_code'];
-        if (!in_array($key, $allowed)) continue;
+        if (!array_key_exists($key, $labels)) continue;
         $stmt->execute([
             'key'      => $key,
             'value'    => $value,
-            'label_ar' => $key === 'header_code' ? 'كود الهيدر' : 'كود البودي',
+            'label_ar' => $labels[$key],
             'value2'   => $value,
         ]);
     }

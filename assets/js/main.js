@@ -690,27 +690,88 @@ function renderArticles(articles) {
 // ============================================================
 // RENDER CATEGORIES  (سلايدر الأقسام)
 // ============================================================
-function renderCategories(categories) {
-  const slider = document.getElementById('categories-slider');
-  if (!slider) return;
-  slider.innerHTML = '';
+function renderCategories(categories, settings) {
+  const container = document.getElementById('categories-slider');
+  if (!container) return;
 
   if (!categories || !categories.length) {
-    document.getElementById('categories').style.display = 'none';
+    const sec = document.getElementById('categories');
+    if (sec) sec.style.display = 'none';
     return;
   }
 
-  categories.forEach(cat => {
-    const a = document.createElement('a');
-    a.className = 'category-card';
-    a.href      = `category.php?slug=${cat.slug}`;
-    a.innerHTML = `
-      <div class="category-icon">
-        <i class="fas ${cat.icon || 'fa-star'}"></i>
+  const autoplay = settings?.slider_autoplay !== '0';
+  const speed    = parseInt(settings?.slider_speed  || '3000');
+  const perView  = parseInt(settings?.slider_per_view || '5');
+
+  const cardsHTML = categories.map(cat => `
+    <a class="category-card" href="category.php?slug=${encodeURIComponent(cat.slug)}">
+      <div class="category-icon"><i class="fas ${cat.icon || 'fa-star'}"></i></div>
+      <div class="category-name">${cat.name_ar}</div>
+    </a>`).join('');
+
+  container.innerHTML = `
+    <div class="cat-slider-wrap">
+      <button class="cat-nav" id="cat-prev" aria-label="السابق" disabled>
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <div class="cat-outer">
+        <div class="cat-track" id="cat-track">${cardsHTML}</div>
       </div>
-      <div class="category-name">${cat.name_ar}</div>`;
-    slider.appendChild(a);
-  });
+      <button class="cat-nav" id="cat-next" aria-label="التالي">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+    </div>`;
+
+  initCatSlider(categories.length, perView, autoplay, speed);
+}
+
+function initCatSlider(total, perView, autoplay, speed) {
+  const track   = document.getElementById('cat-track');
+  const prevBtn = document.getElementById('cat-prev');
+  const nextBtn = document.getElementById('cat-next');
+  if (!track || !prevBtn || !nextBtn) return;
+
+  let idx  = 0;
+  let timer = null;
+
+  function cardWidth() {
+    const card = track.children[0];
+    if (!card) return 176;
+    return card.offsetWidth + 16; // 16 = gap
+  }
+
+  function maxIdx() {
+    return Math.max(0, total - perView);
+  }
+
+  function goTo(i) {
+    idx = Math.min(Math.max(i, 0), maxIdx());
+    track.style.transform = `translateX(${idx * cardWidth()}px)`;
+    // In LTR track: translateX positive shifts right (shows earlier items)
+    // arrow logic: prev = idx-- , next = idx++
+    prevBtn.disabled = idx <= 0;
+    nextBtn.disabled = idx >= maxIdx();
+  }
+
+  prevBtn.addEventListener('click', () => goTo(idx - 1));
+  nextBtn.addEventListener('click', () => goTo(idx + 1));
+
+  function startAuto() {
+    if (!autoplay || total <= perView) return;
+    timer = setInterval(() => {
+      goTo(idx >= maxIdx() ? 0 : idx + 1);
+    }, speed);
+  }
+
+  const outer = track.parentElement;
+  outer.addEventListener('mouseenter', () => clearInterval(timer));
+  outer.addEventListener('mouseleave', () => startAuto());
+
+  window.addEventListener('resize', () => goTo(idx));
+
+  goTo(0);
+  startAuto();
 }
 
 // ============================================================
@@ -725,7 +786,7 @@ async function loadData() {
       renderSocial(data.social || []);
       renderBranches(data.branches || []);
       renderContact(data.contact || []);
-      renderCategories(data.categories || []);
+      renderCategories(data.categories || [], data.settings || {});
       renderBrands(data.brands || []);
       renderArticles(data.articles || []);
     } else {

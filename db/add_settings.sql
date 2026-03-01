@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 INSERT INTO settings (`key`, value, label_ar) VALUES
-('header_code', '', 'كود الهيدر (Google Analytics / Meta Pixel)'),
-('body_code',   '', 'كود البودي (Google Tag Manager noscript)')
+('header_code',     '',     'كود الهيدر (Google Analytics / Meta Pixel)'),
+('body_code',       '',     'كود البودي (Google Tag Manager noscript)'),
+('slider_per_view', '5',    'عدد بطاقات السلايدر'),
+('slider_autoplay', '1',    'تشغيل تلقائي للسلايدر'),
+('slider_speed',    '3000', 'سرعة السلايدر (مللي ثانية)')
 ON DUPLICATE KEY UPDATE `key` = `key`;
