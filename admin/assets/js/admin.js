@@ -7,6 +7,8 @@
 // ============================================================
 // STATE
 // ============================================================
+let quillInstance = null; // Quill editor instance for category body
+
 const state = {
   currentTab: 'branches',
   editId: null,
@@ -255,6 +257,119 @@ function renderCategories(rows) {
 }
 
 // ============================================================
+// CATEGORY EDITOR  (Quill ↔ HTML toggle)
+// ============================================================
+function initCategoryEditor(bodyHTML = '') {
+  const el = document.getElementById('quill-editor');
+  if (!el) return;
+
+  quillInstance = new Quill('#quill-editor', {
+    theme: 'snow',
+    direction: 'rtl',
+    modules: {
+      toolbar: [
+        [{ header: [2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link'],
+        ['clean'],
+      ],
+    },
+  });
+
+  // Set initial content
+  if (bodyHTML) {
+    quillInstance.root.innerHTML = bodyHTML;
+  }
+}
+
+function switchEditorMode(mode) {
+  const quillWrap = document.getElementById('quill-wrap');
+  const textarea  = document.getElementById('f-body');
+  const btnW      = document.getElementById('btn-wysiwyg');
+  const btnH      = document.getElementById('btn-html');
+  if (!quillWrap || !textarea) return;
+
+  if (mode === 'html') {
+    // Sync Quill → textarea
+    if (quillInstance) textarea.value = quillInstance.root.innerHTML;
+    quillWrap.style.display  = 'none';
+    textarea.style.display   = '';
+    btnW.classList.remove('active');
+    btnH.classList.add('active');
+  } else {
+    // Sync textarea → Quill
+    if (!quillInstance) initCategoryEditor(textarea.value);
+    else quillInstance.root.innerHTML = textarea.value;
+    textarea.style.display   = 'none';
+    quillWrap.style.display  = '';
+    btnH.classList.remove('active');
+    btnW.classList.add('active');
+  }
+}
+
+// ============================================================
+// SLIDER SETTINGS
+// ============================================================
+async function loadSliderSettings() {
+  try {
+    const res  = await fetch('../api/settings.php?admin=1');
+    const data = await res.json();
+    if (!data.success) return;
+    data.data.forEach(row => {
+      const el = document.getElementById(row.key === 'slider_speed' ? 'slider_speed_sec' : row.key);
+      if (!el) return;
+      el.value = row.key === 'slider_speed'
+        ? (parseFloat(row.value) / 1000).toFixed(1)
+        : row.value;
+    });
+  } catch (_) {}
+}
+
+async function saveSliderSettings() {
+  const perView  = parseInt(document.getElementById('slider_per_view')?.value  || 5);
+  const autoplay = document.getElementById('slider_autoplay')?.value  || '1';
+  const speedSec = parseFloat(document.getElementById('slider_speed_sec')?.value || 3);
+
+  try {
+    const res  = await fetch('../api/settings.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        slider_per_view: perView,
+        slider_autoplay: autoplay,
+        slider_speed:    Math.round(speedSec * 1000),
+      }),
+    });
+    const data = await res.json();
+    showToast(data.success ? 'تم حفظ إعدادات السلايدر' : (data.message || 'حدث خطأ'), data.success ? 'success' : 'error');
+  } catch {
+    showToast('فشل الاتصال بالخادم', 'error');
+  }
+}
+
+// ============================================================
+// CLEAR SITE CACHE
+// ============================================================
+async function clearSiteCache() {
+  const btn = document.getElementById('clear-cache-btn');
+  const icon = btn.querySelector('i');
+  icon.className = 'fas fa-spinner fa-spin';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('../api/clear_cache.php', { method: 'POST' });
+    const data = await res.json();
+    showToast(data.message || 'تم مسح الكاش', data.success ? 'success' : 'error');
+  } catch {
+    showToast('فشل الاتصال بالخادم', 'error');
+  }
+
+  icon.className = 'fas fa-broom';
+  btn.disabled = false;
+}
+
+// ============================================================
 // LOAD ALL DATA
 // ============================================================
 async function loadAll() {
@@ -457,8 +572,21 @@ const FORMS = {
       <input type="text" class="form-input" id="f-description" value="${data.description || ''}" placeholder="جملة تعريفية قصيرة تظهر في الصفحة الداخلية" />
     </div>
     <div class="modal-form-group">
-      <label>المحتوى الكامل (HTML)</label>
-      <textarea class="form-input" id="f-body" rows="8" placeholder="أدخل محتوى صفحة القسم بتنسيق HTML...">${data.body || ''}</textarea>
+      <label>المحتوى الكامل</label>
+      <div class="editor-toggle-bar">
+        <button type="button" class="editor-mode-btn active" id="btn-wysiwyg" onclick="switchEditorMode('wysiwyg')">
+          <i class="fas fa-font"></i> مرئي
+        </button>
+        <button type="button" class="editor-mode-btn" id="btn-html" onclick="switchEditorMode('html')">
+          <i class="fas fa-code"></i> HTML
+        </button>
+      </div>
+      <div class="quill-wrap" id="quill-wrap">
+        <div id="quill-editor"></div>
+      </div>
+      <textarea class="form-input" id="f-body" rows="10"
+        style="display:none;font-family:monospace;font-size:13px;direction:ltr;text-align:left"
+        placeholder="أدخل كود HTML هنا...">${(data.body || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
     </div>
     <div class="form-row">
       <div class="modal-form-group">
@@ -530,12 +658,19 @@ function openModal(type, data = {}) {
   document.getElementById('modal-title').textContent = (isEdit ? 'تعديل ' : 'إضافة ') + (MODAL_TITLES[type] || type);
   document.getElementById('modal-body').innerHTML    = FORMS[type](data);
   document.getElementById('modal-overlay').classList.add('open');
+
+  if (type === 'category') {
+    // Decode HTML entities in body before passing to Quill
+    const rawBody = data.body || '';
+    setTimeout(() => initCategoryEditor(rawBody), 60);
+  }
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   state.editId    = null;
   state.editTable = null;
+  if (quillInstance) { quillInstance = null; }
 }
 
 // ============================================================
@@ -573,6 +708,13 @@ async function saveRecord() {
 }
 
 function collectFormData() {
+  // Sync Quill → hidden textarea before collection
+  const quillWrap = document.getElementById('quill-wrap');
+  const bodyField = document.getElementById('f-body');
+  if (quillInstance && quillWrap && quillWrap.style.display !== 'none' && bodyField) {
+    bodyField.value = quillInstance.root.innerHTML;
+  }
+
   const fields = document.querySelectorAll('#modal-body [id^="f-"]');
   const body = {};
   fields.forEach(el => {
@@ -856,7 +998,7 @@ async function init() {
 
   initTabs();
   initSidebar();
-  await Promise.all([loadAll(), loadTrackingCodes()]);
+  await Promise.all([loadAll(), loadTrackingCodes(), loadSliderSettings()]);
 }
 
 init();

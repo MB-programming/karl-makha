@@ -849,3 +849,77 @@ input, select, textarea { font-family: var(--font); }
     box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
     padding: 8px 20px;
 }
+/* ============================================================
+   EDITOR TOGGLE (WYSIWYG ↔ HTML)
+============================================================ */
+.editor-toggle-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.editor-mode-btn {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border-gold);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.editor-mode-btn.active {
+  background: var(--gold);
+  color: #000;
+  border-color: var(--gold);
+}
+.editor-mode-btn:not(.active):hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Quill container overrides */
+.quill-wrap .ql-toolbar {
+  background: rgba(255,255,255,0.05);
+  border-color: var(--border-gold) !important;
+  border-radius: 8px 8px 0 0;
+}
+.quill-wrap .ql-container {
+  background: rgba(255,255,255,0.03);
+  border-color: var(--border-gold) !important;
+  border-radius: 0 0 8px 8px;
+  min-height: 180px;
+  font-family: var(--font);
+  color: var(--text);
+  font-size: 14px;
+  direction: rtl;
+}
+.quill-wrap .ql-editor { direction: rtl; text-align: right; }
+.quill-wrap .ql-picker,
+.quill-wrap .ql-stroke { stroke: var(--text-muted) !important; }
+.quill-wrap .ql-fill   { fill: var(--text-muted) !important; }
+
+/* ============================================================
+   SLIDER SETTINGS BLOCK
+============================================================ */
+.settings-block {
+  margin-top: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+.settings-block-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 15px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-block-header i { font-size: 18px; }

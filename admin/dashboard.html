@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="assets/css/admin.css" />
+  <!-- Quill rich editor -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet" />
 </head>
 <body class="dashboard-page">
 
@@ -55,6 +57,9 @@
     <a href="../index.html" class="sidebar-link" target="_blank">
       <i class="fas fa-external-link-alt"></i> عرض الموقع
     </a>
+    <button class="sidebar-link" id="clear-cache-btn" onclick="clearSiteCache()">
+      <i class="fas fa-broom"></i> مسح الكاش
+    </button>
     <button class="sidebar-link logout-btn" id="logout-btn">
       <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
     </button>
@@ -234,6 +239,34 @@
           <tbody id="categories-tbody"></tbody>
         </table>
       </div>
+
+      <!-- إعدادات السلايدر -->
+      <div class="settings-block" id="slider-settings-block">
+        <div class="settings-block-header">
+          <i class="fas fa-sliders-h"></i>
+          <h3>إعدادات السلايدر</h3>
+        </div>
+        <div class="form-row" style="margin-top:16px">
+          <div class="modal-form-group">
+            <label>عدد البطاقات الظاهرة</label>
+            <input type="number" class="form-input" id="slider_per_view" value="5" min="2" max="10" />
+          </div>
+          <div class="modal-form-group">
+            <label>تشغيل تلقائي</label>
+            <select class="form-input" id="slider_autoplay">
+              <option value="1">مفعّل</option>
+              <option value="0">معطّل</option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label>مدة الانتقال (ثانية)</label>
+            <input type="number" class="form-input" id="slider_speed_sec" value="3" step="0.5" min="1" max="10" />
+          </div>
+        </div>
+        <button class="btn-add" style="margin-top:12px" onclick="saveSliderSettings()">
+          <i class="fas fa-save"></i> حفظ إعدادات السلايدر
+        </button>
+      </div>
     </div>
 
     <!-- ======= TRACKING TAB ======= -->
@@ -354,6 +387,8 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Quill -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <!-- Admin JS -->
 <script src="assets/js/admin.js"></script>
 </body>

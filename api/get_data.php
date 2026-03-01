@@ -88,6 +88,11 @@ $contact = $db->query("
     FROM contact_info WHERE is_active = 1 ORDER BY sort_order ASC
 ")->fetchAll();
 
+// Slider settings
+$settingsRows = $db->query("SELECT `key`, value FROM settings WHERE `key` IN ('slider_per_view','slider_autoplay','slider_speed')")->fetchAll();
+$settings = [];
+foreach ($settingsRows as $r) $settings[$r['key']] = $r['value'];
+
 echo json_encode([
     'success'    => true,
     'branches'   => $branches,
@@ -96,4 +101,5 @@ echo json_encode([
     'articles'   => $articles,
     'social'     => $social,
     'contact'    => $contact,
+    'settings'   => $settings,
 ], JSON_UNESCAPED_UNICODE);
