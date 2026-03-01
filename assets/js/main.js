@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 // ============================================================
 function initParticles() {
   const container = document.getElementById('hero-particles');
+  if (!container) return;
   const count = window.innerWidth < 600 ? 12 : 25;
 
   for (let i = 0; i < count; i++) {
@@ -600,10 +601,11 @@ function renderBrands(brands, useGSAP = true) {
 function renderArticles(articles) {
   const grid = document.getElementById('articles-grid');
   const section = document.getElementById('articles');
+  if (!grid) return;
   grid.innerHTML = '';
 
   if (!articles || !articles.length) {
-    section.style.display = 'none';
+    if (section) section.style.display = 'none';
     return;
   }
 
@@ -959,6 +961,9 @@ if (gsap.plugins && !gsap.plugins.scrollTo) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
+  // Only run homepage-specific code when the preloader exists
+  if (!document.getElementById('preloader')) return;
+
   initParticles();
 
   runPreloader(() => {

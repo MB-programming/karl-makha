@@ -39,6 +39,9 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     </noscript>
 
+    <!-- Preload hero logo (LCP element) -->
+    <link rel="preload" as="image" href="logob.webp" fetchpriority="high" />
+
     <!-- Main CSS -->
     <link rel="stylesheet" href="assets/css/style.css" />
 
@@ -139,7 +142,7 @@
       <div class="hero-content">
         <div class="hero-logo-wrap" id="hero-logo">
           <!-- CSS بيعمله أبيض filter: brightness(0) invert(1) -->
-          <img src="logob.webp" alt="مخازن العناية" class="hero-logo-img" />
+          <img src="logob.webp" alt="مخازن العناية" class="hero-logo-img" fetchpriority="high" />
         </div>
         <h1 style='color:#fff' class="section-title" id="hero-tagline">
         العروض القوية ماتلقينها اون لاين <br />تشوفينها بعينك بمخازن العناية
@@ -291,12 +294,12 @@
     
     <footer class="site-footer">
       <div class="footer-pattern">
-        <img src="pattern-5.webp" alt="" aria-hidden="true" />
+        <img src="pattern-5.webp" alt="" aria-hidden="true" loading="lazy" />
       </div>
       <div class="container">
         <div class="footer-inner">
           <!-- CSS بيعمله أبيض -->
-          <img src="logob.webp" alt="مخازن العناية" class="footer-logo" />
+          <img src="logob.webp" alt="مخازن العناية" class="footer-logo" loading="lazy" />
           <p class="footer-copy">© 2025 مخازن العناية. جميع الحقوق محفوظة.</p>
         </div>
       </div>

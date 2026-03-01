@@ -153,7 +153,8 @@ a { text-decoration:none; color:#007bff; }
 .article-body { line-height:2; font-size:18px; color:#444; }
 .article-body h2, .article-body h3 { margin-top:36px; color:#222; }
 .article-body p  { margin:0 0 20px; }
-.article-body img { max-width:100%; border-radius:10px; margin:20px 0; display:block; }
+.article-body img { max-width:100%; border-radius:10px; margin:20px 0; display:block; height:auto; }
+.article-body img[src=""], .article-body img:not([src]) { display:none; }
 .article-body ul, .article-body ol { padding-right:24px; margin:0 0 20px; }
 .article-body blockquote {
   border-right:4px solid #FFCF06;
@@ -289,7 +290,13 @@ a { text-decoration:none; color:#007bff; }
 
 <script>
 const header = document.getElementById('site-header');
-window.addEventListener('scroll', () => header.classList.toggle('scrolled', scrollY > 60));
+window.addEventListener('scroll', () => header.classList.toggle('scrolled', window.scrollY > 60));
+
+// Add lazy loading to all images in article body
+document.querySelectorAll('.article-body img').forEach(img => {
+  if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
+  if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
+});
 </script>
 
 </body>

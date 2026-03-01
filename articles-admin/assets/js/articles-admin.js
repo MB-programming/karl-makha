@@ -187,7 +187,7 @@ function articleForm(data = {}) {
       </div>
       <div class="modal-form-group">
         <label>تاريخ النشر</label>
-        <input type="datetime-local" class="form-input" id="f-published_at" value="${data.published_at || ''}" />
+        <input type="datetime-local" class="form-input" id="f-published_at" value="${(data.published_at || '').replace(' ', 'T').substring(0, 16)}" />
       </div>
     </div>
 
