@@ -237,11 +237,11 @@ $canonical = 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . '/category.php?slug=' 
 <!-- Footer -->
 <footer class="site-footer" style="margin-top:0">
   <div class="footer-pattern">
-    <img src="pattern-5.webp" alt="" aria-hidden="true" />
+    <img src="pattern-5.webp" alt="" aria-hidden="true" loading="lazy" />
   </div>
   <div class="container">
     <div class="footer-inner">
-      <img src="logob.webp" alt="مخازن العناية" class="footer-logo" />
+      <img src="logob.webp" alt="مخازن العناية" class="footer-logo" loading="lazy" />
       <p class="footer-copy">© 2025 مخازن العناية. جميع الحقوق محفوظة.</p>
     </div>
   </div>
