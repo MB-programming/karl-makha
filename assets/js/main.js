@@ -446,7 +446,7 @@ function renderBranches(branches) {
   });
 
   // ---- منطق عرض المزيد ----
-  const STEP = 5;
+  const STEP = 6;
   let visibleCount = STEP;
 
   function applyVisibility(filterCity) {
@@ -599,16 +599,21 @@ function renderBrands(brands) {
 
 function renderArticles(articles) {
   const grid = document.getElementById('articles-grid');
+  const section = document.getElementById('articles');
   grid.innerHTML = '';
 
   if (!articles || !articles.length) {
-    document.getElementById('articles').style.display = 'none';
+    section.style.display = 'none';
     return;
   }
 
+  const STEP = 6;
+  let visibleCount = STEP;
+
+  // رسم الكروت كلها (مخفية في البداية)
   articles.forEach(article => {
     const card = document.createElement('div');
-    card.className = 'branch-card article-item';
+    card.className = 'branch-card article-item hidden';
 
     const badgeHtml = article.category
       ? `<span class="branch-city-badge">${article.category}</span>`
@@ -634,7 +639,6 @@ function renderArticles(articles) {
     grid.appendChild(card);
   });
 
-  // ظهور تدريجي بـ IntersectionObserver (بدون GSAP)
   const io = new IntersectionObserver((entries, obs) => {
     entries.forEach((entry, i) => {
       if (entry.isIntersecting) {
@@ -644,7 +648,43 @@ function renderArticles(articles) {
     });
   }, { threshold: 0.08 });
 
-  grid.querySelectorAll('.branch-card.article-item').forEach(c => io.observe(c));
+  function applyArticleVisibility() {
+    const allCards = [...grid.querySelectorAll('.branch-card.article-item')];
+
+    allCards.forEach((c, i) => {
+      if (i < visibleCount) {
+        if (c.classList.contains('hidden')) {
+          c.classList.remove('hidden');
+          io.observe(c);
+        }
+      } else {
+        c.classList.add('hidden');
+      }
+    });
+
+    // زرار عرض المزيد
+    let showMoreBtn = document.getElementById('show-more-articles');
+
+    if (allCards.length > visibleCount) {
+      if (!showMoreBtn) {
+        showMoreBtn = document.createElement('button');
+        showMoreBtn.id        = 'show-more-articles';
+        showMoreBtn.className = 'show-more-btn';
+        showMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> عرض المزيد';
+        grid.parentElement.appendChild(showMoreBtn);
+
+        showMoreBtn.addEventListener('click', () => {
+          visibleCount += STEP;
+          applyArticleVisibility();
+        });
+      }
+      showMoreBtn.style.display = 'flex';
+    } else {
+      if (showMoreBtn) showMoreBtn.style.display = 'none';
+    }
+  }
+
+  applyArticleVisibility();
 }
 
 // ============================================================

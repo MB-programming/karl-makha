@@ -31,7 +31,7 @@ try {
         FROM articles
         WHERE is_active = 1
         ORDER BY is_featured DESC, sort_order ASC, created_at DESC
-        LIMIT 12
+        LIMIT 100
     ")->fetchAll();
 } catch (Exception $e) {
     $articles = [];
