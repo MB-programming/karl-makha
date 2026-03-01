@@ -69,11 +69,14 @@ Options -Indexes
     Header always set Cache-Control "public, max-age=2592000"
   </FilesMatch>
 
-  # HTML & PHP → no cache
+  # img.php and minify.php serve static assets — mark them so the no-cache rule skips them
+  SetEnvIf Request_URI "(img|minify)\.php" php_is_asset
+
+  # HTML & PHP → no cache (img.php/minify.php are excluded via env flag above)
   <FilesMatch "\.(html|php)$">
-    Header always set Cache-Control "no-cache, no-store, must-revalidate"
-    Header always set Pragma "no-cache"
-    Header always set Expires "0"
+    Header always set Cache-Control "no-cache, no-store, must-revalidate" env=!php_is_asset
+    Header always set Pragma "no-cache" env=!php_is_asset
+    Header always set Expires "0" env=!php_is_asset
   </FilesMatch>
 
   # CORS للخطوط
