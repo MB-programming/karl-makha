@@ -14,6 +14,10 @@
 error_reporting(0);
 ini_set('display_errors', 0);
 
+// Disable zlib output compression — images are already compressed;
+// zlib would corrupt the Content-Length header set below
+ini_set('zlib.output_compression', 0);
+
 // Allowed source files (prevent path traversal)
 $ALLOWED_EXTS = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
 
