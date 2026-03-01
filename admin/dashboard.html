@@ -40,6 +40,11 @@
       <i class="fas fa-phone-alt"></i>
       <span>معلومات التواصل</span>
     </button>
+    <button class="nav-item" data-tab="categories">
+      <i class="fas fa-th-large"></i>
+      <span>الأقسام</span>
+      <span class="nav-badge" id="badge-categories">0</span>
+    </button>
     <button class="nav-item" data-tab="tracking">
       <i class="fab fa-google"></i>
       <span>كودات التتبع</span>
@@ -195,6 +200,38 @@
             </tr>
           </thead>
           <tbody id="contact-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ======= CATEGORIES TAB ======= -->
+    <div id="tab-categories" class="tab-content">
+      <div class="tab-toolbar">
+        <div class="toolbar-left">
+          <h2 class="tab-title">إدارة الأقسام</h2>
+          <span class="count-label" id="categories-count"></span>
+        </div>
+        <button class="btn-add" onclick="openModal('category')">
+          <i class="fas fa-plus"></i> إضافة قسم
+        </button>
+      </div>
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="بحث في الأقسام..." oninput="filterTable('categories-table', this.value)" />
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="categories-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الأيقونة</th>
+              <th>اسم القسم</th>
+              <th>الـ Slug</th>
+              <th>الحالة</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="categories-tbody"></tbody>
         </table>
       </div>
     </div>

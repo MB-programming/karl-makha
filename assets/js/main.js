@@ -688,6 +688,32 @@ function renderArticles(articles) {
 }
 
 // ============================================================
+// RENDER CATEGORIES  (سلايدر الأقسام)
+// ============================================================
+function renderCategories(categories) {
+  const slider = document.getElementById('categories-slider');
+  if (!slider) return;
+  slider.innerHTML = '';
+
+  if (!categories || !categories.length) {
+    document.getElementById('categories').style.display = 'none';
+    return;
+  }
+
+  categories.forEach(cat => {
+    const a = document.createElement('a');
+    a.className = 'category-card';
+    a.href      = `category.php?slug=${cat.slug}`;
+    a.innerHTML = `
+      <div class="category-icon">
+        <i class="fas ${cat.icon || 'fa-star'}"></i>
+      </div>
+      <div class="category-name">${cat.name_ar}</div>`;
+    slider.appendChild(a);
+  });
+}
+
+// ============================================================
 // FETCH DATA FROM API
 // ============================================================
 async function loadData() {
@@ -699,6 +725,7 @@ async function loadData() {
       renderSocial(data.social || []);
       renderBranches(data.branches || []);
       renderContact(data.contact || []);
+      renderCategories(data.categories || []);
       renderBrands(data.brands || []);
       renderArticles(data.articles || []);
     } else {

@@ -18,6 +18,7 @@ const state = {
     brands: [],
     social: [],
     contact: [],
+    categories: [],
   },
 };
 
@@ -101,11 +102,12 @@ function switchTab(tab) {
   });
 
   const titles = {
-    branches: 'الفروع',
-    brands:   'البراندات',
-    social:   'التواصل الاجتماعي',
-    contact:  'معلومات التواصل',
-    tracking: 'كودات التتبع',
+    branches:   'الفروع',
+    brands:     'البراندات',
+    social:     'التواصل الاجتماعي',
+    contact:    'معلومات التواصل',
+    categories: 'الأقسام',
+    tracking:   'كودات التتبع',
   };
   document.getElementById('topbar-title').textContent = titles[tab] || tab;
 }
@@ -224,27 +226,58 @@ function renderContact(rows) {
   });
 }
 
+// --- CATEGORIES ---
+function renderCategories(rows) {
+  const tbody = document.getElementById('categories-tbody');
+  tbody.innerHTML = '';
+
+  rows.forEach((row, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td><i class="fas ${row.icon || 'fa-star'}" style="font-size:20px;color:#FFCF06"></i></td>
+      <td><strong style="color:#fff">${row.name_ar}</strong></td>
+      <td dir="ltr" style="font-size:12px;color:#aaa">${row.slug}</td>
+      <td>${statusBadge(row.is_active)}</td>
+      <td>
+        <div class="actions">
+          <button class="btn-icon" title="معاينة" onclick="window.open('../category.php?slug=${row.slug}','_blank')"><i class="fas fa-eye"></i></button>
+          <button class="btn-icon" title="تعديل" onclick="editRecord('categories', ${row.id})"><i class="fas fa-edit"></i></button>
+          <button class="btn-icon" title="تفعيل/تعطيل" onclick="toggleRecord('categories', ${row.id})"><i class="fas fa-toggle-on"></i></button>
+          <button class="btn-icon del" title="حذف" onclick="confirmDelete('categories', ${row.id})"><i class="fas fa-trash"></i></button>
+        </div>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('categories-count').textContent = `(${rows.length} قسم)`;
+  document.getElementById('badge-categories').textContent = rows.length;
+}
+
 // ============================================================
 // LOAD ALL DATA
 // ============================================================
 async function loadAll() {
   try {
-    const [branches, brands, social, contact] = await Promise.all([
+    const [branches, brands, social, contact, categories] = await Promise.all([
       apiGet('branches'),
       apiGet('brands'),
       apiGet('social_media'),
       apiGet('contact_info'),
+      apiGet('categories'),
     ]);
 
-    state.data.branches = branches;
-    state.data.brands   = brands;
-    state.data.social   = social;
-    state.data.contact  = contact;
+    state.data.branches   = branches;
+    state.data.brands     = brands;
+    state.data.social     = social;
+    state.data.contact    = contact;
+    state.data.categories = categories;
 
     renderBranches(branches);
     renderBrands(brands);
     renderSocial(social);
     renderContact(contact);
+    renderCategories(categories);
   } catch (err) {
     showToast('فشل تحميل البيانات: ' + err.message, 'error');
   }
@@ -403,6 +436,44 @@ const FORMS = {
       </select>
     </div>`,
 
+  category: (data = {}) => `
+    <div class="form-row">
+      <div class="modal-form-group">
+        <label>اسم القسم (عربي) *</label>
+        <input type="text" class="form-input" id="f-name_ar" value="${data.name_ar || ''}" placeholder="العناية بالبشرة" />
+      </div>
+      <div class="modal-form-group">
+        <label>Slug (رابط القسم) *</label>
+        <input type="text" class="form-input" id="f-slug" value="${data.slug || ''}" placeholder="skincare" dir="ltr" />
+      </div>
+    </div>
+    <div class="modal-form-group">
+      <label>أيقونة Font Awesome</label>
+      <input type="text" class="form-input" id="f-icon" value="${data.icon || 'fa-star'}" placeholder="fa-spa" dir="ltr" />
+      <small style="color:#888;font-size:11px;margin-top:4px;display:block">أمثلة: fa-spa · fa-paint-brush · fa-leaf · fa-cut · fa-baby · fa-apple-alt · fa-heartbeat · fa-spray-can</small>
+    </div>
+    <div class="modal-form-group">
+      <label>وصف مختصر</label>
+      <input type="text" class="form-input" id="f-description" value="${data.description || ''}" placeholder="جملة تعريفية قصيرة تظهر في الصفحة الداخلية" />
+    </div>
+    <div class="modal-form-group">
+      <label>المحتوى الكامل (HTML)</label>
+      <textarea class="form-input" id="f-body" rows="8" placeholder="أدخل محتوى صفحة القسم بتنسيق HTML...">${data.body || ''}</textarea>
+    </div>
+    <div class="form-row">
+      <div class="modal-form-group">
+        <label>الترتيب</label>
+        <input type="number" class="form-input" id="f-sort_order" value="${data.sort_order || 0}" min="0" />
+      </div>
+      <div class="modal-form-group">
+        <label>الحالة</label>
+        <select class="form-input" id="f-is_active">
+          <option value="1" ${data.is_active != 0 ? 'selected' : ''}>نشط</option>
+          <option value="0" ${data.is_active == 0 ? 'selected' : ''}>معطل</option>
+        </select>
+      </div>
+    </div>`,
+
   contact: (data = {}) => `
     <div class="form-row">
       <div class="modal-form-group">
@@ -441,17 +512,19 @@ const FORMS = {
 // OPEN / CLOSE MODAL
 // ============================================================
 const MODAL_TITLES = {
-  branch:  'فرع',
-  brand:   'براند',
-  social:  'منصة تواصل',
-  contact: 'معلومة تواصل',
+  branch:   'فرع',
+  brand:    'براند',
+  social:   'منصة تواصل',
+  contact:  'معلومة تواصل',
+  category: 'قسم',
 };
 
 function openModal(type, data = {}) {
-  state.editTable = type === 'branch'  ? 'branches'     :
-                    type === 'brand'   ? 'brands'       :
-                    type === 'social'  ? 'social_media' :
-                    type === 'contact' ? 'contact_info' : type;
+  state.editTable = type === 'branch'    ? 'branches'     :
+                    type === 'brand'     ? 'brands'       :
+                    type === 'social'    ? 'social_media' :
+                    type === 'contact'   ? 'contact_info' :
+                    type === 'category'  ? 'categories'   : type;
 
   const isEdit = !!state.editId;
   document.getElementById('modal-title').textContent = (isEdit ? 'تعديل ' : 'إضافة ') + (MODAL_TITLES[type] || type);
@@ -524,6 +597,7 @@ async function editRecord(table, id) {
       brands:      'brand',
       social_media:'social',
       contact_info:'contact',
+      categories:  'category',
     };
     openModal(typeMap[table], data.data);
   } catch (err) {
