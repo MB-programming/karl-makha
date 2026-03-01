@@ -738,9 +738,9 @@ function initCatSlider(total, perView, autoplay, speed) {
   }
 
   // ── Clone-based infinite loop ──────────────────────────────
-  // Track layout (LTR inside RTL page, RTL overflow shows right end first):
+  // Layout (LTR track inside RTL page — RTL overflow shows the right end first):
   //   [clone_last×CLONE | real×total | clone_first×CLONE]
-  // Starting idx = CLONE shows the last perView real cards (= original idx=0)
+  // idx=CLONE → right end of real cards (= original idx=0 behavior)
   const CLONE     = perView;
   const realCards = Array.from(track.children);
 
@@ -753,67 +753,67 @@ function initCatSlider(total, perView, autoplay, speed) {
     track.insertBefore(realCards[i].cloneNode(true), track.children[i - (total - CLONE)]);
   }
 
-  let idx          = CLONE; // first real-card position
+  let idx          = CLONE;
   let timer        = null;
   let transitioning = false;
 
-  function cardWidth() {
-    const card = track.children[0];
-    return card ? card.offsetWidth + 16 : 176;
+  function slotWidth() {
+    const c = track.children[0];
+    const w = c ? c.offsetWidth : 0;
+    // fallback to CSS values (160px desktop / 128px mobile) if element is hidden
+    return (w > 0 ? w : (window.innerWidth <= 768 ? 128 : 160)) + 16;
   }
 
-  function setTransform(animated) {
-    if (!animated) {
-      track.style.transition = 'none';
-      track.offsetHeight; // force reflow so browser commits the 'none'
-      track.style.transform = `translateX(${idx * cardWidth()}px)`;
-      // Re-enable CSS transition after two frames (ensures paint before next anim)
-      requestAnimationFrame(() => requestAnimationFrame(() => { track.style.transition = ''; }));
-    } else {
-      track.style.transition = '';
-      track.style.transform = `translateX(${idx * cardWidth()}px)`;
-    }
+  // Instant reposition — no animation
+  function jumpTo(i) {
+    idx = i;
+    track.style.transition = 'none';
+    void track.offsetWidth; // commit the 'none' before changing transform
+    track.style.transform = `translateX(${idx * slotWidth()}px)`;
   }
 
-  // After each animated slide, silently snap if we're in a clone zone
-  track.addEventListener('transitionend', () => {
+  // Animated slide
+  function slideTo(i) {
+    idx = i;
+    track.style.transition = ''; // restore CSS class transition
+    track.style.transform  = `translateX(${idx * slotWidth()}px)`;
+  }
+
+  // Only react to the track's OWN transform transition, not bubbled events
+  // from child .category-card elements (which also have transition: transform)
+  track.addEventListener('transitionend', (e) => {
+    if (e.target !== track || e.propertyName !== 'transform') return;
     transitioning = false;
-    if (idx < CLONE) {
-      idx += total;
-      setTransform(false);
-    } else if (idx >= CLONE + total) {
-      idx -= total;
-      setTransform(false);
-    }
+    if (idx < CLONE)            { jumpTo(idx + total); }
+    else if (idx >= CLONE + total) { jumpTo(idx - total); }
   });
 
   prevBtn.disabled = false;
   prevBtn.addEventListener('click', () => {
     if (transitioning) return;
     transitioning = true;
-    idx--;
-    setTransform(true);
+    slideTo(idx - 1);
   });
   nextBtn.addEventListener('click', () => {
     if (transitioning) return;
     transitioning = true;
-    idx++;
-    setTransform(true);
+    slideTo(idx + 1);
   });
 
   function startAuto() {
+    clearInterval(timer); // always clear first to prevent duplicate timers
     if (!autoplay) return;
     timer = setInterval(() => {
-      if (!transitioning) { transitioning = true; idx++; setTransform(true); }
+      if (!transitioning) { transitioning = true; slideTo(idx + 1); }
     }, speed);
   }
 
   const outer = track.parentElement;
   outer.addEventListener('mouseenter', () => clearInterval(timer));
-  outer.addEventListener('mouseleave', () => startAuto());
-  window.addEventListener('resize', () => setTransform(false));
+  outer.addEventListener('mouseleave', startAuto);
+  window.addEventListener('resize', () => jumpTo(idx));
 
-  setTransform(false);
+  jumpTo(CLONE); // set initial position without animation
   startAuto();
 }
 
