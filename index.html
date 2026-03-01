@@ -39,11 +39,12 @@
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     </noscript>
 
-    <!-- Preload hero logo (LCP element) -->
+    <!-- Preload LCP images immediately (prevents 2.9s LCP render delay) -->
+    <link rel="preload" as="image" href="pattern-1.webp" fetchpriority="high" />
     <link rel="preload" as="image" href="logob.webp" fetchpriority="high" />
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="assets/css/style.css" />
+    <!-- Main CSS (minified via PHP) -->
+    <link rel="stylesheet" href="api/minify.php?f=assets/css/style.css&v=3" />
 
     <!-- Dynamic Header Code -->
     <script>
@@ -135,14 +136,14 @@
 ============================================================ -->
     <section id="hero" class="hero-section">
       <div class="hero-pattern-top">
-        <img src="pattern-1.webp" alt="" aria-hidden="true" />
+        <img src="pattern-1.webp" alt="" aria-hidden="true" width="1440" height="400" fetchpriority="high" />
       </div>
       <div class="hero-particles" id="hero-particles"></div>
 
       <div class="hero-content">
         <div class="hero-logo-wrap" id="hero-logo">
           <!-- CSS بيعمله أبيض filter: brightness(0) invert(1) -->
-          <img src="logob.webp" alt="مخازن العناية" class="hero-logo-img" fetchpriority="high" />
+          <img src="logob.webp" alt="مخازن العناية" class="hero-logo-img" fetchpriority="high" width="260" height="120" />
         </div>
         <h1 style='color:#fff' class="section-title" id="hero-tagline">
         العروض القوية ماتلقينها اون لاين <br />تشوفينها بعينك بمخازن العناية
@@ -166,7 +167,7 @@
       </div>
 
       <div class="hero-pattern-bottom">
-        <img src="pattern-2.webp" alt="" aria-hidden="true" />
+        <img src="pattern-2.webp" alt="" aria-hidden="true" width="1440" height="400" loading="lazy" />
       </div>
     </section>
 
@@ -357,7 +358,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 
     <!-- Main JS -->
-    <script src="assets/js/main.js" defer></script>
+    <script src="assets/js/main.js?v=3" defer></script>
 
     <!-- Google Tag Manager (noscript) -->
     <noscript

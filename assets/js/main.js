@@ -86,13 +86,9 @@ function heroEntrance() {
   gsap.to('.site-header', { y: 0, duration: 0.8, ease: 'power3.out' });
   document.getElementById('site-header').classList.add('visible');
 
-  tl.to('.hero-pattern-top, .hero-pattern-bottom', {
-    opacity: 1,
-    duration: 1.5,
-    ease: 'power2.out',
-  }, 0)
+  // hero-pattern-top/bottom: opacity starts at 1 in CSS (LCP fix — no animation needed)
 
-  .to('#hero-logo', {
+  tl.to('#hero-logo', {
     opacity: 1,
     scale: 1,
     duration: 1.2,
