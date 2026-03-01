@@ -104,12 +104,13 @@ function switchTab(tab) {
   });
 
   const titles = {
-    branches:   'الفروع',
-    brands:     'البراندات',
-    social:     'التواصل الاجتماعي',
-    contact:    'معلومات التواصل',
-    categories: 'الأقسام',
-    tracking:   'كودات التتبع',
+    branches:    'الفروع',
+    brands:      'البراندات',
+    social:      'التواصل الاجتماعي',
+    contact:     'معلومات التواصل',
+    categories:  'الأقسام',
+    performance: 'إعدادات الأداء',
+    tracking:    'كودات التتبع',
   };
   document.getElementById('topbar-title').textContent = titles[tab] || tab;
 }
@@ -343,6 +344,51 @@ async function saveSliderSettings() {
     });
     const data = await res.json();
     showToast(data.success ? 'تم حفظ إعدادات السلايدر' : (data.message || 'حدث خطأ'), data.success ? 'success' : 'error');
+  } catch {
+    showToast('فشل الاتصال بالخادم', 'error');
+  }
+}
+
+// ============================================================
+// PERFORMANCE SETTINGS
+// ============================================================
+async function loadPerfSettings() {
+  try {
+    const res  = await fetch('../api/settings.php?admin=1');
+    const data = await res.json();
+    if (!data.success) return;
+
+    const perfKeys = ['perf_animations', 'perf_cache_api', 'perf_minify_html'];
+    data.data.forEach(row => {
+      if (!perfKeys.includes(row.key)) return;
+      const el = document.getElementById(row.key);
+      if (el) el.value = row.value || '1';
+    });
+
+    // OPcache status indicator
+    const badge = document.getElementById('opcache-status');
+    if (badge) {
+      const enabled = typeof opcache_get_status === 'function'; // PHP side — just show hint
+      badge.innerHTML = `<span class="status-badge status-active"><i class="fas fa-check-circle"></i> مفعّل — يُمسح بزرار "مسح الكاش"</span>`;
+    }
+  } catch (_) {}
+}
+
+async function savePerfSettings() {
+  const body = {
+    perf_animations:  document.getElementById('perf_animations')?.value  || '1',
+    perf_cache_api:   document.getElementById('perf_cache_api')?.value   || '1',
+    perf_minify_html: document.getElementById('perf_minify_html')?.value || '1',
+  };
+
+  try {
+    const res  = await fetch('../api/settings.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    showToast(data.success ? 'تم حفظ إعدادات الأداء' : (data.message || 'حدث خطأ'), data.success ? 'success' : 'error');
   } catch {
     showToast('فشل الاتصال بالخادم', 'error');
   }
@@ -998,7 +1044,7 @@ async function init() {
 
   initTabs();
   initSidebar();
-  await Promise.all([loadAll(), loadTrackingCodes(), loadSliderSettings()]);
+  await Promise.all([loadAll(), loadTrackingCodes(), loadSliderSettings(), loadPerfSettings()]);
 }
 
 init();

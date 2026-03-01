@@ -37,11 +37,14 @@ if ($method === 'POST') {
                           ON DUPLICATE KEY UPDATE value = :value2");
 
     $labels = [
-        'header_code'     => 'كود الهيدر',
-        'body_code'       => 'كود البودي',
-        'slider_per_view' => 'عدد بطاقات السلايدر',
-        'slider_autoplay' => 'تشغيل تلقائي للسلايدر',
-        'slider_speed'    => 'سرعة السلايدر (مللي ثانية)',
+        'header_code'      => 'كود الهيدر',
+        'body_code'        => 'كود البودي',
+        'slider_per_view'  => 'عدد بطاقات السلايدر',
+        'slider_autoplay'  => 'تشغيل تلقائي للسلايدر',
+        'slider_speed'     => 'سرعة السلايدر (مللي ثانية)',
+        'perf_animations'  => 'تأثيرات الأنيميشن (GSAP)',
+        'perf_cache_api'   => 'كاش API',
+        'perf_minify_html' => 'ضغط HTML',
     ];
     foreach ($body as $key => $value) {
         if (!array_key_exists($key, $labels)) continue;

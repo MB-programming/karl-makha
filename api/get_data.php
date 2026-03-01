@@ -6,7 +6,6 @@ require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
-header('Cache-Control: public, max-age=300'); // 5 دقائق كاش
 header('Vary: Accept-Encoding');
 
 $db = getDB();
@@ -88,10 +87,17 @@ $contact = $db->query("
     FROM contact_info WHERE is_active = 1 ORDER BY sort_order ASC
 ")->fetchAll();
 
-// Slider settings
-$settingsRows = $db->query("SELECT `key`, value FROM settings WHERE `key` IN ('slider_per_view','slider_autoplay','slider_speed')")->fetchAll();
+// All settings (slider + performance)
+$settingsRows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
 $settings = [];
 foreach ($settingsRows as $r) $settings[$r['key']] = $r['value'];
+
+// Cache-Control header: controlled by perf_cache_api setting
+if (($settings['perf_cache_api'] ?? '1') !== '0') {
+    header('Cache-Control: public, max-age=300');
+} else {
+    header('Cache-Control: no-cache, no-store');
+}
 
 echo json_encode([
     'success'    => true,

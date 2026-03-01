@@ -1,6 +1,21 @@
 <?php
 require_once __DIR__ . '/api/config.php';
 
+// HTML Minification: controlled by perf_minify_html setting
+try {
+    $db_perf  = getDB();
+    $perf_row = $db_perf->query("SELECT value FROM settings WHERE `key` = 'perf_minify_html' LIMIT 1")->fetch();
+    if ($perf_row && $perf_row['value'] !== '0') {
+        ob_start(function($buf) {
+            return preg_replace(
+                ['/>(\s{2,})</','/>(\s+)</','/<(\s+)/'],
+                ['><','> <','<'],
+                $buf
+            );
+        });
+    }
+} catch (Exception $_) {}
+
 $slug     = trim($_GET['slug'] ?? '');
 $category = null;
 
@@ -151,18 +166,26 @@ $canonical = 'https://' . ($_SERVER['HTTP_HOST'] ?? '') . '/category.php?slug=' 
 <body>
 
 <!-- Header -->
-<header class="site-header" id="site-header">
+<header class="site-header visible scrolled" id="site-header">
   <div class="container header-inner">
     <a href="index.html" class="header-logo">
       <img src="logob.webp" alt="مخازن العناية" />
     </a>
     <nav class="header-nav">
+      <a href="index.html">الرئيسية</a>
       <a href="index.html#branches">الفروع</a>
       <a href="index.html#brands">البراندات</a>
       <a href="index.html#contact">تواصل معنا</a>
     </nav>
   </div>
 </header>
+<script>
+  // Sticky header on category page (no GSAP needed)
+  window.addEventListener('scroll', function() {
+    document.getElementById('site-header')
+      .classList.toggle('scrolled', window.scrollY > 60);
+  });
+</script>
 
 <?php if ($category): ?>
 
