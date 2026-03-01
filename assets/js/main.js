@@ -569,9 +569,14 @@ function renderBrands(brands, useGSAP = true) {
   brands.forEach((brand, i) => {
     const card = document.createElement('div');
 
+    // Route relative logo paths through img.php (resize from ~5000px to 300px)
+    const logoSrc = brand.logo_url && !brand.logo_url.match(/^https?:\/\//)
+      ? `api/img.php?src=${brand.logo_url}&w=300`
+      : brand.logo_url;
+
     const logoHtml = brand.logo_url
       ? `<div class="brand-logo-wrap">
-           <img src="${brand.logo_url}" alt="${brand.name_en}" class="brand-logo-img" loading="lazy"
+           <img src="${logoSrc}" alt="${brand.name_en}" class="brand-logo-img" loading="lazy"
                 onerror="this.parentElement.remove(); this.closest('.brand-card').classList.remove('has-logo')" />
          </div>`
       : `<div class="brand-logo-placeholder">${icons[i % icons.length]}</div>`;
@@ -702,103 +707,87 @@ function renderCategories(categories, settings) {
   const speed    = parseInt(settings?.slider_speed  || '3000');
   const perView  = parseInt(settings?.slider_per_view || '5');
 
-  const cardsHTML = categories.map(cat => `
-    <a class="category-card" href="category.php?slug=${encodeURIComponent(cat.slug)}">
-      <div class="category-icon"><i class="fas ${cat.icon || 'fa-star'}"></i></div>
-      <div class="category-name">${cat.name_ar}</div>
-    </a>`).join('');
+  // Split categories into pages of perView
+  const pages = [];
+  for (let i = 0; i < categories.length; i += perView) {
+    pages.push(categories.slice(i, i + perView));
+  }
 
-  container.innerHTML = `
-    <div class="cat-slider-wrap">
-      <button class="cat-nav" id="cat-prev" aria-label="السابق" disabled>
-        <i class="fas fa-chevron-right"></i>
-      </button>
-      <div class="cat-outer">
-        <div class="cat-track" id="cat-track">${cardsHTML}</div>
-      </div>
-      <button class="cat-nav" id="cat-next" aria-label="التالي">
-        <i class="fas fa-chevron-left"></i>
-      </button>
-    </div>`;
+  const slidesHTML = pages.map((page, pi) => {
+    const cards = page.map(cat => `
+      <a class="category-card" href="category.php?slug=${encodeURIComponent(cat.slug)}">
+        <div class="category-icon"><i class="fas ${cat.icon || 'fa-star'}"></i></div>
+        <div class="category-name">${cat.name_ar}</div>
+      </a>`).join('');
+    return `<div class="slide${pi === 0 ? ' active' : ''}">${cards}</div>`;
+  }).join('');
 
-  initCatSlider(categories.length, perView, autoplay, speed);
-}
+  const dotsHTML = pages.map((_, pi) =>
+    `<div class="dot${pi === 0 ? ' active' : ''}"></div>`
+  ).join('');
 
-function initCatSlider(total, perView, autoplay, speed) {
-  const track   = document.getElementById('cat-track');
-  const prevBtn = document.getElementById('cat-prev');
-  const nextBtn = document.getElementById('cat-next');
-  if (!track || !prevBtn || !nextBtn) return;
-
-  // All cards fit — no slider needed
-  if (total <= perView) {
-    prevBtn.style.display = 'none';
-    nextBtn.style.display = 'none';
+  // Single page — no slider chrome needed
+  if (pages.length <= 1) {
+    container.innerHTML = `<div class="slider-wrapper">${slidesHTML}</div>`;
     return;
   }
 
-  const maxIdx = total - perView;
-  let idx = 0;           // 0 = right end (last cards visible) in RTL layout
+  container.innerHTML = `
+    <div class="slider-container">
+      <div class="slider-wrapper">${slidesHTML}</div>
+      <div class="icons">
+        <button id="previousbtn" class="cat-nav" aria-label="السابق">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+        <button id="nextbtn" class="cat-nav" aria-label="التالي">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      <div class="dots">${dotsHTML}</div>
+    </div>`;
+
+  initCatSlider(autoplay, speed);
+}
+
+function initCatSlider(autoplay, speed) {
+  const nextIcon = document.querySelector('.slider-container #nextbtn');
+  const prevIcon = document.querySelector('.slider-container #previousbtn');
+  const sliders  = document.querySelectorAll('.slider-wrapper .slide');
+  const dots     = document.querySelectorAll('.dots .dot');
+  if (!nextIcon || !prevIcon || !sliders.length) return;
+
+  let index = 0;
   let timer = null;
-  let transitioning = false;
 
-  function slotWidth() {
-    const c = track.children[0];
-    const w = c ? c.offsetWidth : 0;
-    return (w > 0 ? w : (window.innerWidth <= 768 ? 128 : 160)) + 16;
+  function goTo(i) {
+    sliders.forEach(s => s.classList.remove('active'));
+    dots.forEach(d => d.classList.remove('active'));
+    index = (i + sliders.length) % sliders.length;
+    sliders[index].classList.add('active');
+    if (dots[index]) dots[index].classList.add('active');
   }
 
-  // Instant jump — no animation (used for wrap-around)
-  function jumpTo(i) {
-    idx = i;
-    track.style.transition = 'none';
-    void track.offsetWidth;
-    track.style.transform = `translateX(${idx * slotWidth()}px)`;
-  }
+  function goToNextImage() { goTo(index + 1); }
+  function goToPreviousImage() { goTo(index - 1); }
 
-  // Animated slide
-  function slideTo(i) {
-    idx = i;
-    track.style.transition = '';
-    track.style.transform  = `translateX(${idx * slotWidth()}px)`;
-  }
+  nextIcon.addEventListener('click', () => { goToNextImage(); resetAuto(); });
+  prevIcon.addEventListener('click', () => { goToPreviousImage(); resetAuto(); });
 
-  // Only react to the track's own transform — not child card hover transitions
-  track.addEventListener('transitionend', (e) => {
-    if (e.target !== track || e.propertyName !== 'transform') return;
-    transitioning = false;
-  });
-
-  prevBtn.disabled = false;
-  prevBtn.addEventListener('click', () => {
-    if (transitioning) return;
-    if (idx <= 0) { jumpTo(maxIdx); return; }    // wrap to end
-    transitioning = true;
-    slideTo(idx - 1);
-  });
-  nextBtn.addEventListener('click', () => {
-    if (transitioning) return;
-    if (idx >= maxIdx) { jumpTo(0); return; }    // wrap to start
-    transitioning = true;
-    slideTo(idx + 1);
-  });
+  dots.forEach((dot, i) => dot.addEventListener('click', () => { goTo(i); resetAuto(); }));
 
   function startAuto() {
     clearInterval(timer);
     if (!autoplay) return;
-    timer = setInterval(() => {
-      if (transitioning) return;
-      if (idx >= maxIdx) { jumpTo(0); }           // wrap to start
-      else { transitioning = true; slideTo(idx + 1); }
-    }, speed);
+    timer = setInterval(goToNextImage, speed);
+  }
+  function resetAuto() { startAuto(); }
+
+  const wrap = document.querySelector('.slider-container');
+  if (wrap) {
+    wrap.addEventListener('mouseenter', () => clearInterval(timer));
+    wrap.addEventListener('mouseleave', startAuto);
   }
 
-  const outer = track.parentElement;
-  outer.addEventListener('mouseenter', () => clearInterval(timer));
-  outer.addEventListener('mouseleave', startAuto);
-  window.addEventListener('resize', () => jumpTo(idx));
-
-  jumpTo(0);
   startAuto();
 }
 
