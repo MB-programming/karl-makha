@@ -730,43 +730,90 @@ function initCatSlider(total, perView, autoplay, speed) {
   const nextBtn = document.getElementById('cat-next');
   if (!track || !prevBtn || !nextBtn) return;
 
-  let idx      = 0;
-  let timer    = null;
-  const canLoop = total > perView;
+  // All cards fit — no slider needed
+  if (total <= perView) {
+    prevBtn.style.display = 'none';
+    nextBtn.style.display = 'none';
+    return;
+  }
+
+  // ── Clone-based infinite loop ──────────────────────────────
+  // Track layout (LTR inside RTL page, RTL overflow shows right end first):
+  //   [clone_last×CLONE | real×total | clone_first×CLONE]
+  // Starting idx = CLONE shows the last perView real cards (= original idx=0)
+  const CLONE     = perView;
+  const realCards = Array.from(track.children);
+
+  // Append clones of first CLONE real cards at END (visible at low idx in RTL)
+  for (let i = 0; i < CLONE; i++) {
+    track.appendChild(realCards[i].cloneNode(true));
+  }
+  // Prepend clones of last CLONE real cards at START (visible at high idx)
+  for (let i = total - CLONE; i < total; i++) {
+    track.insertBefore(realCards[i].cloneNode(true), track.children[i - (total - CLONE)]);
+  }
+
+  let idx          = CLONE; // first real-card position
+  let timer        = null;
+  let transitioning = false;
 
   function cardWidth() {
     const card = track.children[0];
     return card ? card.offsetWidth + 16 : 176;
   }
 
-  function maxIdx() { return Math.max(0, total - perView); }
-
-  function goTo(i) {
-    const m = maxIdx();
-    // infinite loop wrapping
-    idx = canLoop
-      ? ((i % (m + 1)) + (m + 1)) % (m + 1)
-      : Math.min(Math.max(i, 0), m);
-    track.style.transform  = `translateX(${idx * cardWidth()}px)`;
-    prevBtn.disabled = !canLoop && idx <= 0;
-    nextBtn.disabled = !canLoop && idx >= m;
+  function setTransform(animated) {
+    if (!animated) {
+      track.style.transition = 'none';
+      track.offsetHeight; // force reflow so browser commits the 'none'
+      track.style.transform = `translateX(${idx * cardWidth()}px)`;
+      // Re-enable CSS transition after two frames (ensures paint before next anim)
+      requestAnimationFrame(() => requestAnimationFrame(() => { track.style.transition = ''; }));
+    } else {
+      track.style.transition = '';
+      track.style.transform = `translateX(${idx * cardWidth()}px)`;
+    }
   }
 
-  prevBtn.addEventListener('click', () => goTo(idx - 1));
-  nextBtn.addEventListener('click', () => goTo(idx + 1));
+  // After each animated slide, silently snap if we're in a clone zone
+  track.addEventListener('transitionend', () => {
+    transitioning = false;
+    if (idx < CLONE) {
+      idx += total;
+      setTransform(false);
+    } else if (idx >= CLONE + total) {
+      idx -= total;
+      setTransform(false);
+    }
+  });
+
+  prevBtn.disabled = false;
+  prevBtn.addEventListener('click', () => {
+    if (transitioning) return;
+    transitioning = true;
+    idx--;
+    setTransform(true);
+  });
+  nextBtn.addEventListener('click', () => {
+    if (transitioning) return;
+    transitioning = true;
+    idx++;
+    setTransform(true);
+  });
 
   function startAuto() {
-    if (!autoplay || !canLoop) return;
-    timer = setInterval(() => goTo(idx + 1), speed);
+    if (!autoplay) return;
+    timer = setInterval(() => {
+      if (!transitioning) { transitioning = true; idx++; setTransform(true); }
+    }, speed);
   }
 
   const outer = track.parentElement;
   outer.addEventListener('mouseenter', () => clearInterval(timer));
   outer.addEventListener('mouseleave', () => startAuto());
+  window.addEventListener('resize', () => setTransform(false));
 
-  window.addEventListener('resize', () => goTo(idx));
-
-  goTo(0);
+  setTransform(false);
   startAuto();
 }
 
