@@ -4,18 +4,22 @@
  * Usage: /api/img.php?src=logob.webp&w=340
  *        /api/img.php?src=pattern-1.webp&w=1440&q=60
  *
- * - Resizes to requested width (height auto)
- * - Converts to WebP for maximum compression
+ * - Resizes to requested width (height auto) when GD is available
  * - Sets 1-year Cache-Control via PHP header() (works even if mod_headers disabled)
  * - Caches result to disk so subsequent requests skip resizing
+ * - Falls back to serving the original file if GD/WebP support is missing
  */
+
+// Suppress all PHP notices/warnings so they never corrupt image output
+error_reporting(0);
+ini_set('display_errors', 0);
 
 // Allowed source files (prevent path traversal)
 $ALLOWED_EXTS = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
 
 $src  = trim($_GET['src'] ?? '');
 $w    = max(10, min(3000, intval($_GET['w'] ?? 0)));
-$q    = max(30, min(100, intval($_GET['q'] ?? 82)));  // WebP quality 1-100
+$q    = max(30, min(100, intval($_GET['q'] ?? 82)));
 
 // ── Validate ──────────────────────────────────────────────────
 if (!$src) { http_response_code(400); exit('Missing src'); }
@@ -28,25 +32,26 @@ if (!in_array($ext, $ALLOWED_EXTS, true)) {
     http_response_code(403); exit('Forbidden');
 }
 
-$root     = dirname(__DIR__);   // /home/user/karl-makha
-$srcPath  = $root . '/' . $src;
+$root    = dirname(__DIR__);   // /home/user/karl-makha
+$srcPath = $root . '/' . $src;
 
 if (!is_file($srcPath)) { http_response_code(404); exit('Not found'); }
 
-// ── Cache lookup ──────────────────────────────────────────────
-$cacheDir  = $root . '/cache/img/';
-if (!is_dir($cacheDir)) mkdir($cacheDir, 0755, true);
+$srcMtime = filemtime($srcPath);
 
-$cacheKey  = md5($src . '|' . $w . '|' . $q) . '.webp';
-$cachePath = $cacheDir . $cacheKey;
-$srcMtime  = filemtime($srcPath);
+// ── MIME helpers ───────────────────────────────────────────────
+function mimeForExt(string $ext): string {
+    $map = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',  'gif'  => 'image/gif',
+            'webp' => 'image/webp'];
+    return $map[$ext] ?? 'application/octet-stream';
+}
 
-// Serve headers helper
-function serveWebP(string $data, int $srcMtime): void {
+// ── Serve helper (sets 1-year cache headers then outputs data) ─
+function serveImage(string $data, string $mime, int $srcMtime): void {
     $etag = '"' . md5($data) . '"';
 
-    // 1-year cache — set via PHP so it ALWAYS works even without mod_headers
-    header('Content-Type: image/webp');
+    header('Content-Type: ' . $mime);
     header('Cache-Control: public, max-age=31536000, immutable');
     header('Expires: ' . gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
     header('Last-Modified: ' . gmdate('D, d M Y H:i:s', $srcMtime) . ' GMT');
@@ -55,8 +60,8 @@ function serveWebP(string $data, int $srcMtime): void {
     header('Content-Length: ' . strlen($data));
 
     // Handle conditional GET
-    $ifNoneMatch  = trim($_SERVER['HTTP_IF_NONE_MATCH']  ?? '');
-    $ifModSince   = trim($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '');
+    $ifNoneMatch = trim($_SERVER['HTTP_IF_NONE_MATCH']  ?? '');
+    $ifModSince  = trim($_SERVER['HTTP_IF_MODIFIED_SINCE'] ?? '');
     if ($ifNoneMatch === $etag ||
         ($ifModSince && strtotime($ifModSince) >= $srcMtime)) {
         http_response_code(304);
@@ -67,63 +72,91 @@ function serveWebP(string $data, int $srcMtime): void {
     exit;
 }
 
-// Serve from disk cache if fresh
+// ── Detect GD + WebP support ───────────────────────────────────
+$hasGD   = extension_loaded('gd');
+$gdInfo  = $hasGD ? gd_info() : [];
+$hasWebP = $hasGD && !empty($gdInfo['WebP Support']);
+
+// Map ext → GD loader function name
+$loaderMap = [
+    'webp' => 'imagecreatefromwebp',
+    'jpg'  => 'imagecreatefromjpeg',
+    'jpeg' => 'imagecreatefromjpeg',
+    'png'  => 'imagecreatefrompng',
+    'gif'  => 'imagecreatefromgif',
+];
+$loader = $loaderMap[$ext] ?? null;
+$canLoad = $hasGD && $loader && function_exists($loader);
+
+// ── Cache lookup ───────────────────────────────────────────────
+$cacheDir = $root . '/cache/img/';
+if (!is_dir($cacheDir)) @mkdir($cacheDir, 0755, true);
+
+// Cache key includes whether we can do WebP conversion
+$cacheExt  = ($canLoad && $hasWebP) ? 'webp' : $ext;
+$cacheKey  = md5($src . '|' . $w . '|' . $q . '|' . $cacheExt) . '.' . $cacheExt;
+$cachePath = $cacheDir . $cacheKey;
+
 if (is_file($cachePath) && filemtime($cachePath) >= $srcMtime) {
-    serveWebP(file_get_contents($cachePath), $srcMtime);
+    $mime = $cacheExt === 'webp' ? 'image/webp' : mimeForExt($ext);
+    serveImage(file_get_contents($cachePath), $mime, $srcMtime);
 }
 
-// ── Resize & Convert ──────────────────────────────────────────
-// Load source image
-$img = null;
-switch ($ext) {
-    case 'webp': $img = @imagecreatefromwebp($srcPath); break;
-    case 'jpg':
-    case 'jpeg': $img = @imagecreatefromjpeg($srcPath);  break;
-    case 'png':  $img = @imagecreatefrompng($srcPath);   break;
-    case 'gif':  $img = @imagecreatefromgif($srcPath);   break;
+// ── No GD or can't load this format → serve original as-is ────
+if (!$canLoad) {
+    serveImage(file_get_contents($srcPath), mimeForExt($ext), $srcMtime);
 }
+
+// ── Load source image via GD ───────────────────────────────────
+$img = @$loader($srcPath);
 
 if (!$img) {
-    // Fallback: serve original with cache headers
-    serveWebP(file_get_contents($srcPath), $srcMtime);
+    // GD loaded but failed to decode → serve original
+    serveImage(file_get_contents($srcPath), mimeForExt($ext), $srcMtime);
 }
 
 $origW = imagesx($img);
 $origH = imagesy($img);
 
-// If no width requested, or image already smaller → serve as-is (just convert to webp)
-if ($w <= 0 || $w >= $origW) {
-    // Just re-encode as WebP without resizing
-    ob_start();
-    imagewebp($img, null, $q);
-    $data = ob_get_clean();
+// ── Resize if needed ──────────────────────────────────────────
+if ($w > 0 && $w < $origW) {
+    $newH    = intval($origH * ($w / $origW));
+    $resized = imagecreatetruecolor($w, $newH);
+
+    // Preserve transparency (PNG / WebP with alpha)
+    imagealphablending($resized, false);
+    imagesavealpha($resized, true);
+    $transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
+    imagefilledrectangle($resized, 0, 0, $w, $newH, $transparent);
+
+    imagecopyresampled($resized, $img, 0, 0, 0, 0, $w, $newH, $origW, $origH);
     imagedestroy($img);
-    file_put_contents($cachePath, $data);
-    serveWebP($data, $srcMtime);
+    $img = $resized;
 }
 
-// Calculate proportional height
-$newH = intval($origH * ($w / $origW));
-
-// Create resized image
-$resized = imagecreatetruecolor($w, $newH);
-
-// Preserve transparency (for PNG / WebP with alpha)
-imagealphablending($resized, false);
-imagesavealpha($resized, true);
-$transparent = imagecolorallocatealpha($resized, 0, 0, 0, 127);
-imagefilledrectangle($resized, 0, 0, $w, $newH, $transparent);
-
-imagecopyresampled($resized, $img, 0, 0, 0, 0, $w, $newH, $origW, $origH);
+// ── Encode output ─────────────────────────────────────────────
+ob_start();
+if ($hasWebP) {
+    imagewebp($img, null, $q);
+    $outMime = 'image/webp';
+    $outExt  = 'webp';
+} else {
+    // WebP not available — output in original format
+    switch ($ext) {
+        case 'jpg': case 'jpeg': imagejpeg($img, null, $q); break;
+        case 'png':  imagepng($img);  break;
+        case 'gif':  imagegif($img);  break;
+        default:     imagejpeg($img); break;
+    }
+    $outMime = mimeForExt($ext);
+    $outExt  = $ext;
+}
+$data = ob_get_clean();
 imagedestroy($img);
 
-// Encode to WebP
-ob_start();
-imagewebp($resized, null, $q);
-$data = ob_get_clean();
-imagedestroy($resized);
+// Recalculate cache path with final ext (may differ if WebP unavailable)
+$finalCacheKey  = md5($src . '|' . $w . '|' . $q . '|' . $outExt) . '.' . $outExt;
+$finalCachePath = $cacheDir . $finalCacheKey;
+@file_put_contents($finalCachePath, $data);
 
-// Save to disk cache
-file_put_contents($cachePath, $data);
-
-serveWebP($data, $srcMtime);
+serveImage($data, $outMime, $srcMtime);
