@@ -737,74 +737,59 @@ function initCatSlider(total, perView, autoplay, speed) {
     return;
   }
 
-  // ── Clone-based infinite loop ──────────────────────────────
-  // Layout (LTR track inside RTL page — RTL overflow shows the right end first):
-  //   [clone_last×CLONE | real×total | clone_first×CLONE]
-  // idx=CLONE → right end of real cards (= original idx=0 behavior)
-  const CLONE     = perView;
-  const realCards = Array.from(track.children);
-
-  // Append clones of first CLONE real cards at END (visible at low idx in RTL)
-  for (let i = 0; i < CLONE; i++) {
-    track.appendChild(realCards[i].cloneNode(true));
-  }
-  // Prepend clones of last CLONE real cards at START (visible at high idx)
-  for (let i = total - CLONE; i < total; i++) {
-    track.insertBefore(realCards[i].cloneNode(true), track.children[i - (total - CLONE)]);
-  }
-
-  let idx          = CLONE;
-  let timer        = null;
+  const maxIdx = total - perView;
+  let idx = 0;           // 0 = right end (last cards visible) in RTL layout
+  let timer = null;
   let transitioning = false;
 
   function slotWidth() {
     const c = track.children[0];
     const w = c ? c.offsetWidth : 0;
-    // fallback to CSS values (160px desktop / 128px mobile) if element is hidden
     return (w > 0 ? w : (window.innerWidth <= 768 ? 128 : 160)) + 16;
   }
 
-  // Instant reposition — no animation
+  // Instant jump — no animation (used for wrap-around)
   function jumpTo(i) {
     idx = i;
     track.style.transition = 'none';
-    void track.offsetWidth; // commit the 'none' before changing transform
+    void track.offsetWidth;
     track.style.transform = `translateX(${idx * slotWidth()}px)`;
   }
 
   // Animated slide
   function slideTo(i) {
     idx = i;
-    track.style.transition = ''; // restore CSS class transition
+    track.style.transition = '';
     track.style.transform  = `translateX(${idx * slotWidth()}px)`;
   }
 
-  // Only react to the track's OWN transform transition, not bubbled events
-  // from child .category-card elements (which also have transition: transform)
+  // Only react to the track's own transform — not child card hover transitions
   track.addEventListener('transitionend', (e) => {
     if (e.target !== track || e.propertyName !== 'transform') return;
     transitioning = false;
-    if (idx < CLONE)            { jumpTo(idx + total); }
-    else if (idx >= CLONE + total) { jumpTo(idx - total); }
   });
 
   prevBtn.disabled = false;
   prevBtn.addEventListener('click', () => {
     if (transitioning) return;
+    if (idx <= 0) { jumpTo(maxIdx); return; }    // wrap to end
     transitioning = true;
     slideTo(idx - 1);
   });
   nextBtn.addEventListener('click', () => {
     if (transitioning) return;
+    if (idx >= maxIdx) { jumpTo(0); return; }    // wrap to start
     transitioning = true;
     slideTo(idx + 1);
   });
 
   function startAuto() {
-    clearInterval(timer); // always clear first to prevent duplicate timers
+    clearInterval(timer);
     if (!autoplay) return;
     timer = setInterval(() => {
-      if (!transitioning) { transitioning = true; slideTo(idx + 1); }
+      if (transitioning) return;
+      if (idx >= maxIdx) { jumpTo(0); }           // wrap to start
+      else { transitioning = true; slideTo(idx + 1); }
     }, speed);
   }
 
@@ -813,7 +798,7 @@ function initCatSlider(total, perView, autoplay, speed) {
   outer.addEventListener('mouseleave', startAuto);
   window.addEventListener('resize', () => jumpTo(idx));
 
-  jumpTo(CLONE); // set initial position without animation
+  jumpTo(0);
   startAuto();
 }
 
