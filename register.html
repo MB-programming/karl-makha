@@ -29,13 +29,43 @@
 
     /* ── Hero Banner ─────────────────────── */
     .hero-banner {
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1200 60%, #0a0a0a 100%);
+      position: relative;
+      overflow: hidden;
+      background: #0a0a0a;
       border-bottom: 1px solid rgba(255,207,6,0.25);
       text-align: center;
-      padding: 80px 20px 52px;
-      margin-top: 60px; /* clear the fixed header */
+      padding: 0;
+      margin-top: 60px;
     }
-    .hero-banner .trophy { font-size: 56px; line-height: 1; margin-bottom: 16px; display: block; }
+    .hero-bg-grid {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .hero-bg-grid img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: brightness(0.32) saturate(0.7);
+      display: block;
+    }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.75) 100%),
+        linear-gradient(135deg, rgba(10,10,0,0.5) 0%, rgba(26,18,0,0.4) 50%, rgba(10,10,0,0.5) 100%);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      padding: 80px 20px 52px;
+    }
+    .hero-banner .trophy {
+      font-size: 58px; line-height: 1; margin-bottom: 18px;
+      display: block; color: #FFCF06;
+      filter: drop-shadow(0 0 20px rgba(255,207,6,0.5));
+    }
     .hero-banner h1 {
       font-size: clamp(22px, 5vw, 36px);
       font-weight: 800;
@@ -199,9 +229,19 @@
 
 <!-- ── Hero Banner ─────────────────────── -->
 <div class="hero-banner" id="hero-banner">
-  <span class="trophy">🏆</span>
-  <h1 id="comp-title">تسجيل المسابقة</h1>
-  <p id="comp-subtitle">سجّل بياناتك وكن جزءاً من المسابقة</p>
+  <!-- Car images background -->
+  <div class="hero-bg-grid" aria-hidden="true">
+    <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=500&q=75" alt="" />
+    <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=500&q=75" alt="" />
+    <img src="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=500&q=75" alt="" />
+  </div>
+  <div class="hero-overlay"></div>
+  <!-- Content -->
+  <div class="hero-content">
+    <span class="trophy"><i class="fas fa-trophy"></i></span>
+    <h1 id="comp-title">تسجيل المسابقة</h1>
+    <p id="comp-subtitle">سجّل بياناتك وكن جزءاً من المسابقة</p>
+  </div>
 </div>
 
 <!-- ── Form ────────────────────────────── -->
@@ -490,7 +530,7 @@ function showSuccess(data) {
     customClass: { popup: 'swal2-popup', confirmButton: 'swal-confirm-btn' },
     html: `
       <div class="swal-congrats">
-        <div class="big-icon">🎊</div>
+        <div class="big-icon"><i class="fas fa-award" style="color:#FFCF06"></i></div>
         <h2>تهانينا يا ${escHtml(data.full_name.split(' ')[0])}!</h2>
         <p class="sub-msg">${escHtml(data.success_msg || 'شكراً لتسجيلك في ' + data.comp_title)}</p>
         <div class="swal-ref-card">
