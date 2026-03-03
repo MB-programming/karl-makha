@@ -598,15 +598,9 @@ const FORMS = {
     </div>`,
 
   category: (data = {}) => `
-    <div class="form-row">
-      <div class="modal-form-group">
-        <label>اسم القسم (عربي) *</label>
-        <input type="text" class="form-input" id="f-name_ar" value="${data.name_ar || ''}" placeholder="العناية بالبشرة" />
-      </div>
-      <div class="modal-form-group">
-        <label>Slug (رابط القسم) *</label>
-        <input type="text" class="form-input" id="f-slug" value="${data.slug || ''}" placeholder="skincare" dir="ltr" />
-      </div>
+    <div class="modal-form-group">
+      <label>اسم القسم (عربي) *</label>
+      <input type="text" class="form-input" id="f-name_ar" value="${data.name_ar || ''}" placeholder="العناية بالبشرة" />
     </div>
     <div class="modal-form-group">
       <label>أيقونة Font Awesome</label>
@@ -634,7 +628,28 @@ const FORMS = {
         style="display:none;font-family:monospace;font-size:13px;direction:ltr;text-align:left"
         placeholder="أدخل كود HTML هنا...">${(data.body || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
     </div>
+    <div class="modal-form-group" style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07)">
+      <label style="font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:#888;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+        <i class="fas fa-search" style="color:#FFCF06"></i> إعدادات SEO
+      </label>
+    </div>
     <div class="form-row">
+      <div class="modal-form-group">
+        <label>Slug (رابط القسم) *</label>
+        <input type="text" class="form-input" id="f-slug" value="${data.slug || ''}" placeholder="skincare" dir="ltr" />
+      </div>
+      <div class="modal-form-group">
+        <label>SEO Title <small style="color:#888;font-weight:400">(max 60)</small></label>
+        <input type="text" class="form-input" id="f-seo_title" value="${data.seo_title || ''}"
+               placeholder="العناية بالبشرة | مخازن العناية" maxlength="70" dir="auto" />
+      </div>
+    </div>
+    <div class="modal-form-group">
+      <label>SEO Description <small style="color:#888;font-weight:400">(وصف محركات البحث — max 160)</small></label>
+      <textarea class="form-input" id="f-seo_description" rows="3"
+                placeholder="وصف قصير يظهر في نتائج جوجل..." maxlength="160" dir="auto">${data.seo_description || ''}</textarea>
+    </div>
+    <div class="form-row" style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.07)">
       <div class="modal-form-group">
         <label>الترتيب</label>
         <input type="number" class="form-input" id="f-sort_order" value="${data.sort_order || 0}" min="0" />

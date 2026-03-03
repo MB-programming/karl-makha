@@ -20,6 +20,11 @@ if (!in_array($table, $allowed_tables)) {
 // GET - list all records
 // ------------------------------------------------
 if ($method === 'GET' && !$id) {
+    if ($table === 'categories') {
+        // Idempotent migration: ensure SEO columns exist
+        try { $db->exec("ALTER TABLE categories ADD COLUMN seo_title VARCHAR(255) NOT NULL DEFAULT ''"); } catch(PDOException $e) {}
+        try { $db->exec("ALTER TABLE categories ADD COLUMN seo_description TEXT NOT NULL DEFAULT ''"); } catch(PDOException $e) {}
+    }
     $rows = $db->query("SELECT * FROM `$table` ORDER BY sort_order ASC, id ASC")->fetchAll();
     jsonResponse(['success' => true, 'data' => $rows]);
 }
@@ -100,16 +105,18 @@ if ($method === 'POST') {
             break;
 
         case 'categories':
-            $stmt = $db->prepare("INSERT INTO categories (name_ar, slug, icon, description, body, is_active, sort_order)
-                                  VALUES (:name_ar,:slug,:icon,:description,:body,:is_active,:sort_order)");
+            $stmt = $db->prepare("INSERT INTO categories (name_ar, slug, icon, description, body, seo_title, seo_description, is_active, sort_order)
+                                  VALUES (:name_ar,:slug,:icon,:description,:body,:seo_title,:seo_description,:is_active,:sort_order)");
             $stmt->execute([
-                'name_ar'     => clean($body['name_ar']     ?? ''),
-                'slug'        => clean($body['slug']        ?? ''),
-                'icon'        => clean($body['icon']        ?? 'fa-star'),
-                'description' => clean($body['description'] ?? ''),
-                'body'        => $body['body']              ?? '',
-                'is_active'   => intval($body['is_active']  ?? 1),
-                'sort_order'  => intval($body['sort_order'] ?? 0),
+                'name_ar'         => clean($body['name_ar']         ?? ''),
+                'slug'            => clean($body['slug']            ?? ''),
+                'icon'            => clean($body['icon']            ?? 'fa-star'),
+                'description'     => clean($body['description']     ?? ''),
+                'body'            => $body['body']                  ?? '',
+                'seo_title'       => clean($body['seo_title']       ?? ''),
+                'seo_description' => clean($body['seo_description'] ?? ''),
+                'is_active'       => intval($body['is_active']      ?? 1),
+                'sort_order'      => intval($body['sort_order']     ?? 0),
             ]);
             break;
 
@@ -231,16 +238,20 @@ if ($method === 'PUT' && $id) {
 
         case 'categories':
             $stmt = $db->prepare("UPDATE categories SET name_ar=:name_ar, slug=:slug, icon=:icon,
-                                  description=:description, body=:body, is_active=:is_active, sort_order=:sort_order WHERE id=:id");
+                                  description=:description, body=:body,
+                                  seo_title=:seo_title, seo_description=:seo_description,
+                                  is_active=:is_active, sort_order=:sort_order WHERE id=:id");
             $stmt->execute([
-                'name_ar'     => clean($body['name_ar']     ?? ''),
-                'slug'        => clean($body['slug']        ?? ''),
-                'icon'        => clean($body['icon']        ?? 'fa-star'),
-                'description' => clean($body['description'] ?? ''),
-                'body'        => $body['body']              ?? '',
-                'is_active'   => intval($body['is_active']  ?? 1),
-                'sort_order'  => intval($body['sort_order'] ?? 0),
-                'id'          => $id,
+                'name_ar'         => clean($body['name_ar']         ?? ''),
+                'slug'            => clean($body['slug']            ?? ''),
+                'icon'            => clean($body['icon']            ?? 'fa-star'),
+                'description'     => clean($body['description']     ?? ''),
+                'body'            => $body['body']                  ?? '',
+                'seo_title'       => clean($body['seo_title']       ?? ''),
+                'seo_description' => clean($body['seo_description'] ?? ''),
+                'is_active'       => intval($body['is_active']      ?? 1),
+                'sort_order'      => intval($body['sort_order']     ?? 0),
+                'id'              => $id,
             ]);
             break;
 
