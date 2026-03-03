@@ -45,6 +45,11 @@ if ($method === 'POST') {
         'perf_animations'  => 'تأثيرات الأنيميشن (GSAP)',
         'perf_cache_api'   => 'كاش API',
         'perf_minify_html' => 'ضغط HTML',
+        // Competition settings
+        'comp_active'      => 'تفعيل المسابقة',
+        'comp_title'       => 'عنوان المسابقة',
+        'comp_success_msg' => 'رسالة النجاح (تحت التهنئة)',
+        'comp_ref_prefix'  => 'بادئة رقم المرجع',
     ];
     foreach ($body as $key => $value) {
         if (!array_key_exists($key, $labels)) continue;
