@@ -114,4 +114,9 @@ Options -Indexes
   # Redirect HTTP → HTTPS
   RewriteCond %{HTTPS} off
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Clean URL redirects
+  RewriteRule ^register/?$ /register.html [L,R=301]
+  RewriteRule ^terms/?$ /terms.html [L,R=301]
+  RewriteRule ^privacy/?$ /privacy.html [L,R=301]
 </IfModule>

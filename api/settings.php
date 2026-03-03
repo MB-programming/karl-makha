@@ -50,6 +50,9 @@ if ($method === 'POST') {
         'comp_title'       => 'عنوان المسابقة',
         'comp_success_msg' => 'رسالة النجاح (تحت التهنئة)',
         'comp_ref_prefix'  => 'بادئة رقم المرجع',
+        // Static pages
+        'page_terms'       => 'الشروط والأحكام',
+        'page_privacy'     => 'سياسة الخصوصية',
     ];
     foreach ($body as $key => $value) {
         if (!array_key_exists($key, $labels)) continue;

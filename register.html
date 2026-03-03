@@ -3,368 +3,198 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تسجيل المسابقة | مخازن العناية</title>
+  <title>مسابقة مخازن العناية - شارك واربح</title>
   <link rel="icon" type="image/x-icon" href="favicon.jpeg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Main site CSS (header, footer, fonts, vars) -->
+  <link rel="stylesheet" href="api/minify.php?f=assets/css/style.css&v=3" />
+  <!-- Font Awesome -->
+  <link rel="preload" as="style"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  </noscript>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
 
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Page overrides ────────────────────── */
+    html, body { background: #0a0a0a; min-height: 100%; }
+    body { padding-top: 0; }
 
-    :root {
-      --gold:    #FFCF06;
-      --black:   #0a0a0a;
-      --dark:    #111;
-      --card:    #1a1a1a;
-      --border:  rgba(255,207,6,0.25);
-      --text:    #f0f0f0;
-      --muted:   #888;
-      --error:   #ff5c5c;
-      --success: #25d366;
-      --radius:  14px;
-      --trans:   0.25s ease;
-    }
-
-    html, body {
-      height: 100%;
-      background: var(--black);
-      color: var(--text);
-      font-family: 'Tajawal', sans-serif;
-      direction: rtl;
-    }
-
-    /* ── Header ─────────────────────────── */
-    .page-header {
-      background: #000;
-      border-bottom: 1px solid rgba(255,207,6,0.15);
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .page-header a { display: flex; align-items: center; }
-    .page-header img { height: 46px; width: auto; }
-    .back-link {
-      color: var(--gold);
-      text-decoration: none;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: opacity var(--trans);
-    }
-    .back-link:hover { opacity: .75; }
+    /* header is sticky/fixed in site CSS — show it immediately without GSAP */
+    .site-header { transform: translateY(0) !important; }
 
     /* ── Hero Banner ─────────────────────── */
     .hero-banner {
       background: linear-gradient(135deg, #0a0a0a 0%, #1a1200 60%, #0a0a0a 100%);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid rgba(255,207,6,0.25);
       text-align: center;
-      padding: 52px 20px 44px;
+      padding: 80px 20px 52px;
+      margin-top: 60px; /* clear the fixed header */
     }
-    .hero-banner .trophy {
-      font-size: 56px;
-      line-height: 1;
-      margin-bottom: 16px;
-      display: block;
-    }
+    .hero-banner .trophy { font-size: 56px; line-height: 1; margin-bottom: 16px; display: block; }
     .hero-banner h1 {
       font-size: clamp(22px, 5vw, 36px);
       font-weight: 800;
-      color: var(--gold);
+      color: #FFCF06;
       margin-bottom: 10px;
+      font-family: 'Tajawal', sans-serif;
     }
-    .hero-banner p {
-      font-size: 16px;
-      color: var(--muted);
-      max-width: 480px;
-      margin: 0 auto;
-    }
+    .hero-banner p { font-size: 16px; color: #888; max-width: 480px; margin: 0 auto; font-family: 'Tajawal', sans-serif; }
 
     /* ── Form Container ──────────────────── */
-    .form-wrap {
-      max-width: 640px;
-      margin: 36px auto 60px;
-      padding: 0 16px;
-    }
-
+    .form-wrap { max-width: 640px; margin: 36px auto 0; padding: 0 16px; }
     .form-card {
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: #1a1a1a;
+      border: 1px solid rgba(255,207,6,0.25);
       border-radius: 20px;
       padding: 36px 32px;
     }
-
     .form-section-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--gold);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 20px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 700; color: #FFCF06;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 20px; padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,207,6,0.25);
+      font-family: 'Tajawal', sans-serif;
     }
 
-    /* ── Field ───────────────────────────── */
-    .field-group {
-      margin-bottom: 20px;
+    /* ── Fields ──────────────────────────── */
+    .field-group { margin-bottom: 20px; }
+    .field-group > label {
+      display: block; font-size: 14px; font-weight: 700;
+      color: #f0f0f0; margin-bottom: 7px; font-family: 'Tajawal', sans-serif;
     }
-    .field-group label {
-      display: block;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 7px;
-    }
-    .field-group label span.req { color: var(--gold); margin-right: 2px; }
-
-    .input-wrap {
-      position: relative;
-    }
-    .input-wrap i {
-      position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      font-size: 15px;
-      pointer-events: none;
+    .field-group label span.req { color: #FFCF06; margin-right: 2px; }
+    .input-wrap { position: relative; }
+    .input-wrap > i {
+      position: absolute; right: 14px; top: 50%;
+      transform: translateY(-50%); color: #888; font-size: 15px; pointer-events: none;
     }
     .field-input {
-      width: 100%;
-      background: #0e0e0e;
-      border: 1.5px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 13px 42px 13px 14px;
-      font-size: 15px;
-      font-family: 'Tajawal', sans-serif;
-      color: var(--text);
-      outline: none;
-      transition: border-color var(--trans), box-shadow var(--trans);
-      appearance: none;
-      -webkit-appearance: none;
+      width: 100%; background: #0e0e0e;
+      border: 1.5px solid rgba(255,255,255,0.1); border-radius: 10px;
+      padding: 13px 42px 13px 14px; font-size: 15px;
+      font-family: 'Tajawal', sans-serif; color: #f0f0f0; outline: none;
+      transition: border-color .25s ease, box-shadow .25s ease;
+      appearance: none; -webkit-appearance: none;
     }
-    .field-input::placeholder { color: var(--muted); }
-    .field-input:focus {
-      border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(255,207,6,0.12);
-    }
-    .field-input.error {
-      border-color: var(--error);
-      box-shadow: 0 0 0 3px rgba(255,92,92,0.1);
-    }
-
-    /* Select arrow */
+    .field-input::placeholder { color: #888; }
+    .field-input:focus { border-color: #FFCF06; box-shadow: 0 0 0 3px rgba(255,207,6,0.12); }
+    .field-input.error { border-color: #ff5c5c; box-shadow: 0 0 0 3px rgba(255,92,92,0.1); }
     select.field-input {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: left 14px center;
-      padding-left: 36px;
+      background-repeat: no-repeat; background-position: left 14px center; padding-left: 36px;
     }
-
-    .field-hint {
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 5px;
-    }
-    .field-error {
-      font-size: 12px;
-      color: var(--error);
-      margin-top: 5px;
-      display: none;
-    }
+    .field-hint { font-size: 12px; color: #888; margin-top: 5px; font-family: 'Tajawal', sans-serif; }
+    .field-error { font-size: 12px; color: #ff5c5c; margin-top: 5px; display: none; font-family: 'Tajawal', sans-serif; }
     .field-error.show { display: block; }
-
-    /* ── Two columns ─────────────────────── */
-    .row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 520px) { .row-2 { grid-template-columns: 1fr; } }
 
-    /* ── Gender Radio ─────────────────────── */
-    .gender-row {
-      display: flex;
-      gap: 16px;
-    }
-    .gender-option {
-      flex: 1;
-      position: relative;
-    }
-    .gender-option input[type="radio"] {
-      position: absolute;
-      opacity: 0;
-      width: 0;
-    }
+    /* ── Gender ──────────────────────────── */
+    .gender-row { display: flex; gap: 16px; }
+    .gender-option { flex: 1; position: relative; }
+    .gender-option input[type="radio"] { position: absolute; opacity: 0; width: 0; }
     .gender-label {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 13px;
-      border: 1.5px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      background: #0e0e0e;
-      cursor: pointer;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--muted);
-      transition: all var(--trans);
-      user-select: none;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 13px; border: 1.5px solid rgba(255,255,255,0.1); border-radius: 10px;
+      background: #0e0e0e; cursor: pointer; font-size: 15px; font-weight: 700;
+      color: #888; transition: all .25s ease; user-select: none;
+      font-family: 'Tajawal', sans-serif;
     }
     .gender-option input:checked + .gender-label {
-      border-color: var(--gold);
-      color: var(--gold);
-      background: rgba(255,207,6,0.08);
-      box-shadow: 0 0 0 3px rgba(255,207,6,0.12);
+      border-color: #FFCF06; color: #FFCF06;
+      background: rgba(255,207,6,0.08); box-shadow: 0 0 0 3px rgba(255,207,6,0.12);
     }
     .gender-label:hover { border-color: rgba(255,207,6,0.4); }
 
     /* ── Terms ───────────────────────────── */
     .terms-wrap {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      background: rgba(255,207,6,0.04);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      cursor: pointer;
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,207,6,0.04); border: 1px solid rgba(255,207,6,0.25);
+      border-radius: 10px; padding: 14px; cursor: pointer;
     }
     .terms-wrap input[type="checkbox"] {
-      width: 20px;
-      height: 20px;
-      min-width: 20px;
-      accent-color: var(--gold);
-      cursor: pointer;
-      margin-top: 1px;
+      width: 20px; height: 20px; min-width: 20px;
+      accent-color: #FFCF06; cursor: pointer; margin-top: 1px;
     }
-    .terms-text {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.7;
-    }
-    .terms-text a {
-      color: var(--gold);
-      text-decoration: underline;
-    }
-    .terms-text strong { color: var(--error); }
+    .terms-text { font-size: 13px; color: #888; line-height: 1.7; font-family: 'Tajawal', sans-serif; }
+    .terms-text a { color: #FFCF06; text-decoration: underline; }
+    .terms-text strong { color: #ff5c5c; }
 
     /* ── Submit ──────────────────────────── */
     .btn-submit {
-      width: 100%;
-      margin-top: 28px;
-      padding: 16px;
-      background: var(--gold);
-      color: #000;
-      border: none;
-      border-radius: 12px;
-      font-family: 'Tajawal', sans-serif;
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      transition: opacity var(--trans), transform var(--trans);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      width: 100%; margin-top: 28px; padding: 16px;
+      background: #FFCF06; color: #000; border: none; border-radius: 12px;
+      font-family: 'Tajawal', sans-serif; font-size: 18px; font-weight: 800;
+      cursor: pointer; transition: opacity .25s ease, transform .25s ease;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
     }
     .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
     .btn-submit:active { transform: scale(.98); }
-    .btn-submit:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-      transform: none;
-    }
+    .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
     .btn-submit .spinner {
-      width: 20px; height: 20px;
-      border: 2.5px solid rgba(0,0,0,0.2);
-      border-top-color: #000;
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      display: none;
+      width: 20px; height: 20px; border: 2.5px solid rgba(0,0,0,0.2);
+      border-top-color: #000; border-radius: 50%;
+      animation: spin .7s linear infinite; display: none;
     }
     .btn-submit.loading .spinner { display: block; }
     .btn-submit.loading .btn-text { display: none; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Closed Banner ───────────────────── */
+    /* ── Closed ──────────────────────────── */
     .closed-banner {
-      display: none;
-      background: rgba(255,92,92,0.08);
-      border: 1px solid rgba(255,92,92,0.3);
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      color: var(--error);
-      font-size: 16px;
-      font-weight: 700;
+      display: none; background: rgba(255,92,92,0.08);
+      border: 1px solid rgba(255,92,92,0.3); border-radius: 12px;
+      padding: 24px; text-align: center; color: #ff5c5c;
+      font-size: 16px; font-weight: 700; font-family: 'Tajawal', sans-serif;
     }
 
-    /* ── SweetAlert customization ─────────── */
-    .swal2-popup {
-      font-family: 'Tajawal', sans-serif !important;
-      direction: rtl;
-    }
-    .swal-congrats {
-      text-align: center;
-      padding: 8px 0;
-    }
+    /* ── SweetAlert ──────────────────────── */
+    .swal2-popup { font-family: 'Tajawal', sans-serif !important; direction: rtl; }
+    .swal-congrats { text-align: center; padding: 8px 0; }
     .swal-congrats .big-icon { font-size: 60px; margin-bottom: 12px; }
-    .swal-congrats h2 {
-      font-size: 22px;
-      font-weight: 800;
-      color: #FFCF06;
-      margin-bottom: 8px;
-    }
-    .swal-congrats .sub-msg {
-      font-size: 15px;
-      color: #aaa;
-      margin-bottom: 20px;
-      line-height: 1.6;
-    }
+    .swal-congrats h2 { font-size: 22px; font-weight: 800; color: #FFCF06; margin-bottom: 8px; font-family: 'Tajawal', sans-serif; }
+    .swal-congrats .sub-msg { font-size: 15px; color: #aaa; margin-bottom: 20px; line-height: 1.6; font-family: 'Tajawal', sans-serif; }
     .swal-ref-card {
-      background: rgba(255,207,6,0.06);
-      border: 1px solid rgba(255,207,6,0.25);
-      border-radius: 12px;
-      padding: 16px 20px;
-      text-align: right;
+      background: rgba(255,207,6,0.06); border: 1px solid rgba(255,207,6,0.25);
+      border-radius: 12px; padding: 16px 20px; text-align: right;
     }
     .swal-ref-card .ref-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 0;
-      font-size: 14px;
-      color: #ddd;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex; align-items: center; gap: 10px; padding: 6px 0;
+      font-size: 14px; color: #ddd; border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-family: 'Tajawal', sans-serif;
     }
     .swal-ref-card .ref-row:last-child { border-bottom: none; }
     .swal-ref-card .ref-row i { color: #FFCF06; width: 18px; text-align: center; }
     .swal-ref-card .ref-val { font-weight: 700; color: #fff; margin-right: auto; }
+
+    /* ── Footer spacing ──────────────────── */
+    .site-footer { margin-top: 60px; }
   </style>
 </head>
 <body>
 
-<!-- ── Header ──────────────────────────── -->
-<header class="page-header">
-  <a href="index.html">
-    <img src="api/img.php?src=logob.webp&w=260" alt="مخازن العناية"
-         onerror="this.src='favicon.jpeg'" />
-  </a>
-  <a href="index.html" class="back-link">
-    <i class="fas fa-arrow-left"></i> الرئيسية
-  </a>
+<!-- ── Site Header (same as index.html) ─────── -->
+<header id="site-header" class="site-header visible scrolled">
+  <div class="header-inner">
+    <a href="index.html" class="header-logo">
+      <img src="logob.webp" alt="مخازن العناية" />
+    </a>
+    <nav class="header-nav">
+      <a href="index.html" style="font-size:18px;">الرئيسية</a>
+      <a href="https://wa.me/966920029921"
+         style="padding: 0px; margin-bottom: -6px; font-size: 19px">
+        <i class="fa-brands fa-whatsapp"></i>
+      </a>
+      <i class="fa-solid fa-phone">
+        <a href="tel:+966920029921">92002 9921</a>
+      </i>
+    </nav>
+  </div>
 </header>
 
 <!-- ── Hero Banner ─────────────────────── -->
@@ -505,9 +335,9 @@
         <input type="checkbox" id="terms" name="terms" />
         <span class="terms-text">
           أوافق على
-          <a href="#" onclick="return false">الشروط والأحكام</a>
+          <a href="terms.html" target="_blank">الشروط والأحكام</a>
           و
-          <a href="#" onclick="return false">سياسة الخصوصية</a>
+          <a href="privacy.html" target="_blank">سياسة الخصوصية</a>
           واستقبال العروض والرسائل التسويقية
           <strong>*</strong>
         </span>
@@ -524,6 +354,19 @@
     </button>
   </form>
 </div>
+
+<!-- ── Site Footer (same as index.html) ─────── -->
+<footer class="site-footer">
+  <div class="footer-pattern">
+    <img src="api/img.php?src=pattern-5.webp&w=800" alt="" aria-hidden="true" loading="lazy" />
+  </div>
+  <div class="container">
+    <div class="footer-inner">
+      <img src="logob.webp" alt="مخازن العناية" class="footer-logo" loading="lazy" />
+      <p class="footer-copy">© 2025 مخازن العناية. جميع الحقوق محفوظة.</p>
+    </div>
+  </div>
+</footer>
 
 <script>
 // ── Load competition settings ─────────────────────────────
