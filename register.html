@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل المسابقة | مخازن العناية</title>
+  <link rel="icon" type="image/x-icon" href="favicon.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js" defer></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:    #FFCF06;
+      --black:   #0a0a0a;
+      --dark:    #111;
+      --card:    #1a1a1a;
+      --border:  rgba(255,207,6,0.25);
+      --text:    #f0f0f0;
+      --muted:   #888;
+      --error:   #ff5c5c;
+      --success: #25d366;
+      --radius:  14px;
+      --trans:   0.25s ease;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--black);
+      color: var(--text);
+      font-family: 'Tajawal', sans-serif;
+      direction: rtl;
+    }
+
+    /* ── Header ─────────────────────────── */
+    .page-header {
+      background: #000;
+      border-bottom: 1px solid rgba(255,207,6,0.15);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .page-header a { display: flex; align-items: center; }
+    .page-header img { height: 46px; width: auto; }
+    .back-link {
+      color: var(--gold);
+      text-decoration: none;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity var(--trans);
+    }
+    .back-link:hover { opacity: .75; }
+
+    /* ── Hero Banner ─────────────────────── */
+    .hero-banner {
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1200 60%, #0a0a0a 100%);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      padding: 52px 20px 44px;
+    }
+    .hero-banner .trophy {
+      font-size: 56px;
+      line-height: 1;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .hero-banner h1 {
+      font-size: clamp(22px, 5vw, 36px);
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .hero-banner p {
+      font-size: 16px;
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* ── Form Container ──────────────────── */
+    .form-wrap {
+      max-width: 640px;
+      margin: 36px auto 60px;
+      padding: 0 16px;
+    }
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px;
+    }
+
+    .form-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Field ───────────────────────────── */
+    .field-group {
+      margin-bottom: 20px;
+    }
+    .field-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 7px;
+    }
+    .field-group label span.req { color: var(--gold); margin-right: 2px; }
+
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap i {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 15px;
+      pointer-events: none;
+    }
+    .field-input {
+      width: 100%;
+      background: #0e0e0e;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 13px 42px 13px 14px;
+      font-size: 15px;
+      font-family: 'Tajawal', sans-serif;
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--trans), box-shadow var(--trans);
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .field-input::placeholder { color: var(--muted); }
+    .field-input:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(255,207,6,0.12);
+    }
+    .field-input.error {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(255,92,92,0.1);
+    }
+
+    /* Select arrow */
+    select.field-input {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: left 14px center;
+      padding-left: 36px;
+    }
+
+    .field-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+    .field-error {
+      font-size: 12px;
+      color: var(--error);
+      margin-top: 5px;
+      display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* ── Two columns ─────────────────────── */
+    .row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 520px) { .row-2 { grid-template-columns: 1fr; } }
+
+    /* ── Gender Radio ─────────────────────── */
+    .gender-row {
+      display: flex;
+      gap: 16px;
+    }
+    .gender-option {
+      flex: 1;
+      position: relative;
+    }
+    .gender-option input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+    }
+    .gender-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px;
+      border: 1.5px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      background: #0e0e0e;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      transition: all var(--trans);
+      user-select: none;
+    }
+    .gender-option input:checked + .gender-label {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(255,207,6,0.08);
+      box-shadow: 0 0 0 3px rgba(255,207,6,0.12);
+    }
+    .gender-label:hover { border-color: rgba(255,207,6,0.4); }
+
+    /* ── Terms ───────────────────────────── */
+    .terms-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(255,207,6,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+    }
+    .terms-wrap input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      min-width: 20px;
+      accent-color: var(--gold);
+      cursor: pointer;
+      margin-top: 1px;
+    }
+    .terms-text {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .terms-text a {
+      color: var(--gold);
+      text-decoration: underline;
+    }
+    .terms-text strong { color: var(--error); }
+
+    /* ── Submit ──────────────────────────── */
+    .btn-submit {
+      width: 100%;
+      margin-top: 28px;
+      padding: 16px;
+      background: var(--gold);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: opacity var(--trans), transform var(--trans);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-submit .spinner {
+      width: 20px; height: 20px;
+      border: 2.5px solid rgba(0,0,0,0.2);
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    .btn-submit.loading .spinner { display: block; }
+    .btn-submit.loading .btn-text { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Closed Banner ───────────────────── */
+    .closed-banner {
+      display: none;
+      background: rgba(255,92,92,0.08);
+      border: 1px solid rgba(255,92,92,0.3);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      color: var(--error);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    /* ── SweetAlert customization ─────────── */
+    .swal2-popup {
+      font-family: 'Tajawal', sans-serif !important;
+      direction: rtl;
+    }
+    .swal-congrats {
+      text-align: center;
+      padding: 8px 0;
+    }
+    .swal-congrats .big-icon { font-size: 60px; margin-bottom: 12px; }
+    .swal-congrats h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #FFCF06;
+      margin-bottom: 8px;
+    }
+    .swal-congrats .sub-msg {
+      font-size: 15px;
+      color: #aaa;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+    .swal-ref-card {
+      background: rgba(255,207,6,0.06);
+      border: 1px solid rgba(255,207,6,0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: right;
+    }
+    .swal-ref-card .ref-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #ddd;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .swal-ref-card .ref-row:last-child { border-bottom: none; }
+    .swal-ref-card .ref-row i { color: #FFCF06; width: 18px; text-align: center; }
+    .swal-ref-card .ref-val { font-weight: 700; color: #fff; margin-right: auto; }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────── -->
+<header class="page-header">
+  <a href="index.html">
+    <img src="api/img.php?src=logob.webp&w=260" alt="مخازن العناية"
+         onerror="this.src='favicon.jpeg'" />
+  </a>
+  <a href="index.html" class="back-link">
+    <i class="fas fa-arrow-left"></i> الرئيسية
+  </a>
+</header>
+
+<!-- ── Hero Banner ─────────────────────── -->
+<div class="hero-banner" id="hero-banner">
+  <span class="trophy">🏆</span>
+  <h1 id="comp-title">تسجيل المسابقة</h1>
+  <p id="comp-subtitle">سجّل بياناتك وكن جزءاً من المسابقة</p>
+</div>
+
+<!-- ── Form ────────────────────────────── -->
+<div class="form-wrap">
+  <div id="closed-msg" class="closed-banner">
+    <i class="fas fa-lock" style="font-size:28px;display:block;margin-bottom:10px;"></i>
+    التسجيل في المسابقة مغلق حالياً، تابعونا للمزيد من الأخبار.
+  </div>
+
+  <form class="form-card" id="reg-form" novalidate>
+    <p class="form-section-title">الرجاء إدخال البيانات</p>
+
+    <!-- Name -->
+    <div class="field-group">
+      <label for="full_name">الاسم الكامل <span class="req">*</span></label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="full_name" name="full_name"
+               class="field-input" placeholder="محمد عبدالله السعيد"
+               autocomplete="name" maxlength="100" />
+      </div>
+      <div class="field-error" id="err-full_name"></div>
+    </div>
+
+    <div class="row-2">
+      <!-- Email -->
+      <div class="field-group">
+        <label for="email">البريد الإلكتروني <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" name="email"
+                 class="field-input" placeholder="example@email.com"
+                 autocomplete="email" />
+        </div>
+        <div class="field-error" id="err-email"></div>
+      </div>
+
+      <!-- Phone -->
+      <div class="field-group">
+        <label for="phone">رقم الجوال <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-mobile-alt"></i>
+          <input type="tel" id="phone" name="phone"
+                 class="field-input" placeholder="05XXXXXXXX"
+                 maxlength="10" dir="ltr" style="text-align:right"
+                 inputmode="numeric" />
+        </div>
+        <div class="field-hint">10 أرقام يبدأ بـ 05</div>
+        <div class="field-error" id="err-phone"></div>
+      </div>
+    </div>
+
+    <div class="row-2">
+      <!-- National ID -->
+      <div class="field-group">
+        <label for="national_id">رقم الهوية <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-id-card"></i>
+          <input type="text" id="national_id" name="national_id"
+                 class="field-input" placeholder="1XXXXXXXXX"
+                 maxlength="10" dir="ltr" style="text-align:right"
+                 inputmode="numeric" />
+        </div>
+        <div class="field-hint">10 أرقام يبدأ بـ 1 أو 2</div>
+        <div class="field-error" id="err-national_id"></div>
+      </div>
+
+      <!-- City -->
+      <div class="field-group">
+        <label for="city">المدينة <span class="req">*</span></label>
+        <div class="input-wrap">
+          <i class="fas fa-city"></i>
+          <select id="city" name="city" class="field-input">
+            <option value="">اختر المدينة</option>
+            <option>الرياض</option>
+            <option>جدة</option>
+            <option>مكة المكرمة</option>
+            <option>المدينة المنورة</option>
+            <option>الدمام</option>
+            <option>الخبر</option>
+            <option>الظهران</option>
+            <option>الطائف</option>
+            <option>بريدة</option>
+            <option>تبوك</option>
+            <option>خميس مشيط</option>
+            <option>حائل</option>
+            <option>الأحساء</option>
+            <option>القطيف</option>
+            <option>جازان</option>
+            <option>نجران</option>
+            <option>ينبع</option>
+            <option>الجبيل</option>
+            <option>أبها</option>
+            <option>الباحة</option>
+            <option>عرعر</option>
+            <option>سكاكا</option>
+            <option>حفر الباطن</option>
+            <option>الخرج</option>
+            <option>المجمعة</option>
+            <option>القصيم</option>
+            <option>أخرى</option>
+          </select>
+        </div>
+        <div class="field-error" id="err-city"></div>
+      </div>
+    </div>
+
+    <!-- Gender -->
+    <div class="field-group">
+      <label>الجنس <span class="req">*</span></label>
+      <div class="gender-row">
+        <div class="gender-option">
+          <input type="radio" name="gender" id="gender-male" value="male" />
+          <label class="gender-label" for="gender-male">
+            <i class="fas fa-mars"></i> ذكر
+          </label>
+        </div>
+        <div class="gender-option">
+          <input type="radio" name="gender" id="gender-female" value="female" />
+          <label class="gender-label" for="gender-female">
+            <i class="fas fa-venus"></i> أنثى
+          </label>
+        </div>
+      </div>
+      <div class="field-error" id="err-gender"></div>
+    </div>
+
+    <!-- Terms -->
+    <div class="field-group">
+      <label class="terms-wrap" for="terms">
+        <input type="checkbox" id="terms" name="terms" />
+        <span class="terms-text">
+          أوافق على
+          <a href="#" onclick="return false">الشروط والأحكام</a>
+          و
+          <a href="#" onclick="return false">سياسة الخصوصية</a>
+          واستقبال العروض والرسائل التسويقية
+          <strong>*</strong>
+        </span>
+      </label>
+      <div class="field-error" id="err-terms"></div>
+    </div>
+
+    <!-- Submit -->
+    <button type="submit" class="btn-submit" id="submit-btn">
+      <div class="spinner"></div>
+      <span class="btn-text">
+        <i class="fas fa-paper-plane"></i> إرسال
+      </span>
+    </button>
+  </form>
+</div>
+
+<script>
+// ── Load competition settings ─────────────────────────────
+(function loadSettings() {
+  fetch('api/registration.php?check=1')
+    .then(r => r.json())
+    .catch(() => null);
+
+  fetch('api/get_data.php')
+    .then(r => r.json())
+    .then(d => {
+      const s = d.settings || {};
+      if (s.comp_title)    document.getElementById('comp-title').textContent    = s.comp_title;
+      if (s.comp_subtitle) document.getElementById('comp-subtitle').textContent = s.comp_subtitle;
+
+      // Check if competition is closed
+      if (s.comp_active === '0') {
+        document.getElementById('closed-msg').style.display = 'block';
+        document.getElementById('reg-form').style.display   = 'none';
+      }
+    })
+    .catch(() => {});
+})();
+
+// ── Validation helpers ────────────────────────────────────
+const rules = {
+  full_name:   v => v.trim().length >= 3 || 'الاسم الكامل لا يقل عن 3 أحرف',
+  email:       v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()) || 'البريد الإلكتروني غير صحيح',
+  phone:       v => /^05\d{8}$/.test(v.trim()) || 'الجوال يبدأ بـ 05 ويكون 10 أرقام',
+  national_id: v => /^[12]\d{9}$/.test(v.trim()) || 'الهوية 10 أرقام وتبدأ بـ 1 أو 2',
+  city:        v => v.trim().length > 0 || 'يرجى اختيار المدينة',
+  gender:      () => {
+    const val = document.querySelector('input[name="gender"]:checked')?.value;
+    return val ? true : 'يرجى اختيار الجنس';
+  },
+  terms:       () => document.getElementById('terms').checked || 'يجب الموافقة على الشروط والأحكام',
+};
+
+function showError(field, msg) {
+  const el = document.getElementById('err-' + field);
+  const inp = document.getElementById(field);
+  if (!el) return;
+  if (msg) {
+    el.textContent = msg;
+    el.classList.add('show');
+    if (inp) inp.classList.add('error');
+  } else {
+    el.classList.remove('show');
+    if (inp) inp.classList.remove('error');
+  }
+}
+
+function validateAll() {
+  let valid = true;
+  ['full_name','email','phone','national_id','city','gender','terms'].forEach(field => {
+    const el  = document.getElementById(field);
+    const val = el ? el.value : '';
+    const res = rules[field](val);
+    if (res !== true) { showError(field, res); valid = false; }
+    else              { showError(field, ''); }
+  });
+  return valid;
+}
+
+// Live validation on blur
+['full_name','email','phone','national_id','city'].forEach(field => {
+  const el = document.getElementById(field);
+  if (!el) return;
+  el.addEventListener('blur', () => {
+    const res = rules[field](el.value);
+    showError(field, res !== true ? res : '');
+  });
+  el.addEventListener('input', () => {
+    if (el.classList.contains('error')) {
+      const res = rules[field](el.value);
+      if (res === true) showError(field, '');
+    }
+  });
+});
+
+document.querySelectorAll('input[name="gender"]').forEach(r =>
+  r.addEventListener('change', () => showError('gender', ''))
+);
+document.getElementById('terms').addEventListener('change', () => showError('terms', ''));
+
+// ── Phone: allow digits only ──────────────────────────────
+document.getElementById('phone').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+document.getElementById('national_id').addEventListener('input', function() {
+  this.value = this.value.replace(/\D/g, '').slice(0, 10);
+});
+
+// ── Confetti ──────────────────────────────────────────────
+function fireConfetti() {
+  const count = 200, defaults = { origin: { y: 0.6 } };
+  function fire(ratio, opts) {
+    confetti(Object.assign({}, defaults, opts, {
+      particleCount: Math.floor(count * ratio)
+    }));
+  }
+  fire(0.25, { spread: 26, startVelocity: 55 });
+  fire(0.20, { spread: 60 });
+  fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+  fire(0.10, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+  fire(0.10, { spread: 120, startVelocity: 45 });
+}
+
+// ── Show success SweetAlert ───────────────────────────────
+function showSuccess(data) {
+  fireConfetti();
+  setTimeout(fireConfetti, 800);
+
+  Swal.fire({
+    background: '#1a1a1a',
+    color: '#f0f0f0',
+    showConfirmButton: true,
+    confirmButtonText: 'حسناً 🎉',
+    confirmButtonColor: '#FFCF06',
+    allowOutsideClick: false,
+    customClass: { popup: 'swal2-popup', confirmButton: 'swal-confirm-btn' },
+    html: `
+      <div class="swal-congrats">
+        <div class="big-icon">🎊</div>
+        <h2>تهانينا يا ${escHtml(data.full_name.split(' ')[0])}!</h2>
+        <p class="sub-msg">${escHtml(data.success_msg || 'شكراً لتسجيلك في ' + data.comp_title)}</p>
+        <div class="swal-ref-card">
+          <div class="ref-row">
+            <i class="fas fa-user"></i>
+            <span>الاسم</span>
+            <span class="ref-val">${escHtml(data.full_name)}</span>
+          </div>
+          <div class="ref-row">
+            <i class="fas fa-hashtag"></i>
+            <span>رقم المرجع</span>
+            <span class="ref-val" style="color:#FFCF06">${escHtml(data.ref_number)}</span>
+          </div>
+          <div class="ref-row">
+            <i class="fas fa-calendar-check"></i>
+            <span>تاريخ التسجيل</span>
+            <span class="ref-val">${escHtml(data.date)}</span>
+          </div>
+        </div>
+      </div>`,
+    didOpen: () => {
+      // Add inline style for swal popup since it's out of scope
+      const popup = document.querySelector('.swal2-popup');
+      if (popup) {
+        popup.style.fontFamily = "'Tajawal', sans-serif";
+        popup.style.direction  = 'rtl';
+        popup.style.borderRadius = '20px';
+        popup.style.border = '1px solid rgba(255,207,6,0.25)';
+        popup.style.maxWidth = '480px';
+      }
+    },
+  });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── Form submit ───────────────────────────────────────────
+document.getElementById('reg-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  if (!validateAll()) {
+    const firstErr = this.querySelector('.field-input.error, .field-error.show');
+    if (firstErr) firstErr.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  const gender = document.querySelector('input[name="gender"]:checked')?.value;
+
+  try {
+    const res = await fetch('api/registration.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name:   document.getElementById('full_name').value.trim(),
+        email:       document.getElementById('email').value.trim(),
+        phone:       document.getElementById('phone').value.trim(),
+        national_id: document.getElementById('national_id').value.trim(),
+        city:        document.getElementById('city').value,
+        gender,
+        terms:       document.getElementById('terms').checked,
+      }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      this.style.display = 'none';
+      showSuccess(data);
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'تنبيه',
+        text: data.message || 'حدث خطأ، يرجى المحاولة مجدداً',
+        confirmButtonText: 'حسناً',
+        confirmButtonColor: '#FFCF06',
+        background: '#1a1a1a',
+        color: '#f0f0f0',
+        customClass: { popup: 'swal2-popup' },
+        didOpen: () => {
+          const p = document.querySelector('.swal2-popup');
+          if (p) { p.style.fontFamily="'Tajawal',sans-serif"; p.style.direction='rtl'; }
+        },
+      });
+    }
+  } catch {
+    Swal.fire({
+      icon: 'error',
+      title: 'خطأ في الاتصال',
+      text: 'تعذّر الاتصال بالخادم، يرجى المحاولة لاحقاً',
+      confirmButtonText: 'حسناً',
+      confirmButtonColor: '#FFCF06',
+      background: '#1a1a1a',
+      color: '#f0f0f0',
+    });
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+</script>
+</body>
+</html>

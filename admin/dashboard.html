@@ -55,6 +55,11 @@
       <i class="fab fa-google"></i>
       <span>كودات التتبع</span>
     </button>
+    <button class="nav-item" data-tab="competition">
+      <i class="fas fa-trophy"></i>
+      <span>المسابقة</span>
+      <span class="nav-badge" id="badge-competition">0</span>
+    </button>
   </nav>
 
   <div class="sidebar-footer">
@@ -412,6 +417,110 @@
       </div>
     </div>
 
+  <!-- ============================================================
+    COMPETITION TAB
+  ============================================================ -->
+  <div id="tab-competition" class="tab-content">
+
+    <!-- Settings Card -->
+    <div class="perf-card" style="margin-bottom:24px">
+      <h3 class="perf-card-title"><i class="fas fa-cog"></i> إعدادات المسابقة</h3>
+      <div class="perf-grid">
+
+        <div class="perf-item">
+          <div class="perf-label">حالة التسجيل</div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="comp_active" checked />
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+          <div class="perf-desc">تفعيل أو إغلاق استقبال التسجيلات</div>
+        </div>
+
+        <div class="perf-item" style="grid-column:1/-1">
+          <div class="perf-label">عنوان المسابقة</div>
+          <input type="text" id="comp_title" class="form-input"
+                 placeholder="مسابقة مخازن العناية" style="max-width:420px" />
+          <div class="perf-desc">يظهر في صفحة التسجيل وفي رسالة التهنئة</div>
+        </div>
+
+        <div class="perf-item" style="grid-column:1/-1">
+          <div class="perf-label">رسالة النجاح (تحت التهنئة)</div>
+          <textarea id="comp_success_msg" class="form-input"
+                    rows="3" style="resize:vertical"
+                    placeholder="شكراً لمشاركتك، سيتم التواصل معك في حال فوزك..."></textarea>
+          <div class="perf-desc">تظهر في نافذة التهنئة بعد التسجيل الناجح</div>
+        </div>
+
+        <div class="perf-item">
+          <div class="perf-label">بادئة رقم المرجع</div>
+          <input type="text" id="comp_ref_prefix" class="form-input"
+                 placeholder="MK" maxlength="8" style="max-width:140px" />
+          <div class="perf-desc">مثال: MK → MK-محمد38472</div>
+        </div>
+
+      </div>
+      <div style="margin-top:18px">
+        <button class="btn-save" onclick="saveCompSettings()">
+          <i class="fas fa-save"></i> حفظ الإعدادات
+        </button>
+        <a href="../register.html" target="_blank"
+           style="margin-right:12px;color:var(--gold);font-size:14px;text-decoration:none">
+          <i class="fas fa-external-link-alt"></i> عرض صفحة التسجيل
+        </a>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="comp-stats" id="comp-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px"></div>
+
+    <!-- Filters -->
+    <div class="table-toolbar" style="flex-wrap:wrap;gap:10px;margin-bottom:16px;display:flex;align-items:center">
+      <input type="text"   id="comp-search"    class="search-input" placeholder="بحث باسم / جوال / هوية / بريد..." style="flex:1;min-width:200px" />
+      <select id="comp-city"   class="search-input" style="min-width:130px">
+        <option value="">كل المدن</option>
+      </select>
+      <select id="comp-gender" class="search-input" style="min-width:120px">
+        <option value="">كل الجنسين</option>
+        <option value="male">ذكر</option>
+        <option value="female">أنثى</option>
+      </select>
+      <input type="date" id="comp-date-from" class="search-input" title="من تاريخ" />
+      <input type="date" id="comp-date-to"   class="search-input" title="إلى تاريخ" />
+      <button class="btn-save" onclick="loadRegistrations()" style="padding:8px 16px">
+        <i class="fas fa-filter"></i> فلترة
+      </button>
+      <button class="btn-save" onclick="exportRegistrations()"
+              style="padding:8px 16px;background:var(--green)">
+        <i class="fas fa-file-csv"></i> تصدير CSV
+      </button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table class="data-table" id="comp-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>رقم المرجع</th>
+            <th>الاسم الكامل</th>
+            <th>البريد</th>
+            <th>الجوال</th>
+            <th>الهوية</th>
+            <th>المدينة</th>
+            <th>الجنس</th>
+            <th>تاريخ التسجيل</th>
+            <th>حذف</th>
+          </tr>
+        </thead>
+        <tbody id="comp-tbody">
+          <tr><td colspan="10" style="text-align:center;color:#888;padding:32px">
+            جارٍ التحميل...
+          </td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div><!-- /tab-competition -->
+
   </div><!-- /content-area -->
 </div><!-- /main-content -->
 
@@ -462,5 +571,205 @@
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <!-- Admin JS -->
 <script src="assets/js/admin.js"></script>
+
+<!-- ============================================================
+  COMPETITION JS
+============================================================ -->
+<script>
+// ── Competition settings ──────────────────────────────────
+async function loadCompSettings() {
+  try {
+    const res  = await fetch('../api/settings.php?admin=1');
+    const data = await res.json();
+    if (!data.success) return;
+    const map = {};
+    data.data.forEach(r => { map[r.key] = r.value; });
+
+    const compActive = document.getElementById('comp_active');
+    if (compActive) compActive.checked = (map['comp_active'] ?? '1') !== '0';
+
+    ['comp_title','comp_success_msg','comp_ref_prefix'].forEach(k => {
+      const el = document.getElementById(k);
+      if (el && map[k] !== undefined) el.value = map[k];
+    });
+  } catch(e) { console.warn('loadCompSettings error', e); }
+}
+
+async function saveCompSettings() {
+  const payload = {
+    comp_active:      document.getElementById('comp_active').checked ? '1' : '0',
+    comp_title:       document.getElementById('comp_title').value.trim(),
+    comp_success_msg: document.getElementById('comp_success_msg').value.trim(),
+    comp_ref_prefix:  document.getElementById('comp_ref_prefix').value.trim() || 'MK',
+  };
+  try {
+    const res  = await fetch('../api/settings.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    showToast(data.success ? 'تم حفظ إعدادات المسابقة ✓' : (data.message || 'خطأ'), data.success);
+  } catch { showToast('خطأ في الاتصال', false); }
+}
+
+// ── Load registrations ────────────────────────────────────
+async function loadRegistrations() {
+  const search   = document.getElementById('comp-search')?.value    || '';
+  const city     = document.getElementById('comp-city')?.value      || '';
+  const gender   = document.getElementById('comp-gender')?.value    || '';
+  const dateFrom = document.getElementById('comp-date-from')?.value || '';
+  const dateTo   = document.getElementById('comp-date-to')?.value   || '';
+
+  const params = new URLSearchParams({ admin: 1 });
+  if (search)   params.set('search',    search);
+  if (city)     params.set('city',      city);
+  if (gender)   params.set('gender',    gender);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo)   params.set('date_to',   dateTo);
+
+  const tbody = document.getElementById('comp-tbody');
+  tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:#888">جارٍ التحميل...</td></tr>';
+
+  try {
+    const res  = await fetch('../api/registration.php?' + params.toString());
+    const data = await res.json();
+    if (!data.success) { tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#f55">خطأ في تحميل البيانات</td></tr>'; return; }
+
+    renderCompStats(data.stats);
+    renderCompTable(data.rows);
+    updateCityFilter(data.stats.cities);
+
+    // Update badge
+    const badge = document.getElementById('badge-competition');
+    if (badge) badge.textContent = data.stats.total;
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:24px;color:#f55">تعذّر الاتصال بالخادم</td></tr>';
+  }
+}
+
+function renderCompStats(stats) {
+  const el = document.getElementById('comp-stats');
+  if (!el) return;
+
+  const male   = stats.genders.find(g => g.gender === 'male')?.cnt   || 0;
+  const female = stats.genders.find(g => g.gender === 'female')?.cnt || 0;
+
+  el.innerHTML = `
+    <div class="comp-stat-card" style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:var(--gold)">${stats.total}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:4px">إجمالي المسجلين</div>
+    </div>
+    <div class="comp-stat-card" style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:var(--green)">${stats.today}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:4px">مسجلون اليوم</div>
+    </div>
+    <div class="comp-stat-card" style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#6db9f7">${male}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:4px">ذكور</div>
+    </div>
+    <div class="comp-stat-card" style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:12px;padding:20px;text-align:center">
+      <div style="font-size:28px;font-weight:800;color:#f7a6d2">${female}</div>
+      <div style="font-size:13px;color:#aaa;margin-top:4px">إناث</div>
+    </div>`;
+}
+
+function renderCompTable(rows) {
+  const tbody = document.getElementById('comp-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:#888">لا توجد بيانات بهذه الفلاتر</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><span style="color:var(--gold);font-weight:700;font-size:13px">${esc(r.ref_number)}</span></td>
+      <td style="font-weight:600">${esc(r.full_name)}</td>
+      <td style="font-size:13px;direction:ltr;text-align:right">${esc(r.email)}</td>
+      <td style="direction:ltr;text-align:right">${esc(r.phone)}</td>
+      <td style="direction:ltr;text-align:right;color:#aaa">${esc(r.national_id)}</td>
+      <td>${esc(r.city)}</td>
+      <td>
+        <span class="status-badge ${r.gender==='male' ? 'status-active' : ''}"
+              style="${r.gender==='female'?'background:rgba(247,166,210,0.12);color:#f7a6d2;':''}">
+          ${r.gender === 'male' ? 'ذكر' : 'أنثى'}
+        </span>
+      </td>
+      <td style="font-size:13px;color:#aaa;white-space:nowrap">${esc(r.created_at?.slice(0,16) || '')}</td>
+      <td>
+        <button class="btn-icon del" title="حذف"
+                onclick="deleteRegistration(${r.id}, '${esc(r.full_name)}')">
+          <i class="fas fa-trash"></i>
+        </button>
+      </td>
+    </tr>`).join('');
+}
+
+function updateCityFilter(cities) {
+  const sel = document.getElementById('comp-city');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">كل المدن</option>'
+    + cities.map(c => `<option value="${esc(c.city)}"${c.city===current?' selected':''}>${esc(c.city)} (${c.cnt})</option>`).join('');
+}
+
+async function deleteRegistration(id, name) {
+  if (!confirm(`حذف تسجيل "${name}"؟`)) return;
+  try {
+    const res  = await fetch(`../api/registration.php?admin=1&id=${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) { showToast('تم الحذف ✓'); loadRegistrations(); }
+    else showToast(data.message || 'خطأ في الحذف', false);
+  } catch { showToast('خطأ في الاتصال', false); }
+}
+
+function exportRegistrations() {
+  const search   = document.getElementById('comp-search')?.value    || '';
+  const city     = document.getElementById('comp-city')?.value      || '';
+  const gender   = document.getElementById('comp-gender')?.value    || '';
+  const dateFrom = document.getElementById('comp-date-from')?.value || '';
+  const dateTo   = document.getElementById('comp-date-to')?.value   || '';
+
+  const params = new URLSearchParams({ admin: 1, export: 'csv' });
+  if (search)   params.set('search',    search);
+  if (city)     params.set('city',      city);
+  if (gender)   params.set('gender',    gender);
+  if (dateFrom) params.set('date_from', dateFrom);
+  if (dateTo)   params.set('date_to',   dateTo);
+
+  window.location.href = '../api/registration.php?' + params.toString();
+}
+
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Hook into tab switch ──────────────────────────────────
+(function patchTabSwitch() {
+  // Wait for admin.js to define switchTab, then wrap it
+  const origSwitch = window.switchTab;
+  window.switchTab = function(tab) {
+    if (origSwitch) origSwitch(tab);
+    if (tab === 'competition') {
+      loadCompSettings();
+      loadRegistrations();
+    }
+  };
+  // Also listen for nav-item clicks directly
+  document.querySelectorAll('.nav-item[data-tab="competition"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      loadCompSettings();
+      loadRegistrations();
+    });
+  });
+})();
+
+// Live search on Enter key
+document.getElementById('comp-search')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadRegistrations();
+});
+</script>
 </body>
 </html>
