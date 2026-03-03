@@ -55,6 +55,10 @@
       <i class="fab fa-google"></i>
       <span>كودات التتبع</span>
     </button>
+    <button class="nav-item" data-tab="pages">
+      <i class="fas fa-file-alt"></i>
+      <span>الصفحات</span>
+    </button>
     <button class="nav-item" data-tab="competition">
       <i class="fas fa-trophy"></i>
       <span>المسابقة</span>
@@ -418,6 +422,51 @@
     </div>
 
   <!-- ============================================================
+    PAGES TAB (Terms & Privacy)
+  ============================================================ -->
+  <div id="tab-pages" class="tab-content">
+
+    <!-- Terms Card -->
+    <div class="perf-card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <h3 class="perf-card-title" style="margin-bottom:0">
+          <i class="fas fa-file-contract"></i> الشروط والأحكام
+        </h3>
+        <a href="../terms.html" target="_blank"
+           style="color:var(--gold);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-external-link-alt"></i> عرض الصفحة
+        </a>
+      </div>
+      <div id="quill-terms" style="min-height:320px"></div>
+      <div style="margin-top:16px">
+        <button class="btn-save" onclick="savePage('terms')">
+          <i class="fas fa-save"></i> حفظ الشروط والأحكام
+        </button>
+      </div>
+    </div>
+
+    <!-- Privacy Card -->
+    <div class="perf-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+        <h3 class="perf-card-title" style="margin-bottom:0">
+          <i class="fas fa-shield-alt"></i> سياسة الخصوصية
+        </h3>
+        <a href="../privacy.html" target="_blank"
+           style="color:var(--gold);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px">
+          <i class="fas fa-external-link-alt"></i> عرض الصفحة
+        </a>
+      </div>
+      <div id="quill-privacy" style="min-height:320px"></div>
+      <div style="margin-top:16px">
+        <button class="btn-save" onclick="savePage('privacy')">
+          <i class="fas fa-save"></i> حفظ سياسة الخصوصية
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /tab-pages -->
+
+  <!-- ============================================================
     COMPETITION TAB
   ============================================================ -->
   <div id="tab-competition" class="tab-content">
@@ -759,6 +808,58 @@ function esc(str) {
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Pages (Terms & Privacy) ───────────────────────────────
+let quillTerms   = null;
+let quillPrivacy = null;
+
+const PAGE_QUILL_OPTS = {
+  theme: 'snow',
+  direction: 'rtl',
+  modules: {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      [{ align: [] }],
+      ['link'],
+      ['clean'],
+    ],
+  },
+};
+
+async function loadPages() {
+  try {
+    const res  = await fetch('../api/settings.php?admin=1');
+    const data = await res.json();
+    if (!data.success) return;
+    const map = {};
+    data.data.forEach(r => { map[r.key] = r.value; });
+
+    if (!quillTerms) {
+      quillTerms = new Quill('#quill-terms', PAGE_QUILL_OPTS);
+      if (map.page_terms) quillTerms.root.innerHTML = map.page_terms;
+    }
+    if (!quillPrivacy) {
+      quillPrivacy = new Quill('#quill-privacy', PAGE_QUILL_OPTS);
+      if (map.page_privacy) quillPrivacy.root.innerHTML = map.page_privacy;
+    }
+  } catch(e) { console.warn('loadPages error', e); }
+}
+
+async function savePage(type) {
+  const quill = type === 'terms' ? quillTerms : quillPrivacy;
+  if (!quill) return;
+  try {
+    const res  = await fetch('../api/settings.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ['page_' + type]: quill.root.innerHTML }),
+    });
+    const data = await res.json();
+    showToast(data.success ? 'تم الحفظ ✓' : (data.message || 'خطأ'), data.success);
+  } catch { showToast('خطأ في الاتصال', false); }
+}
+
 // ── Hook into tab switch ──────────────────────────────────
 (function patchTabSwitch() {
   // Wait for admin.js to define switchTab, then wrap it
@@ -769,6 +870,9 @@ function esc(str) {
       loadCompSettings();
       loadRegistrations();
     }
+    if (tab === 'pages') {
+      loadPages();
+    }
   };
   // Also listen for nav-item clicks directly
   document.querySelectorAll('.nav-item[data-tab="competition"]').forEach(btn => {
@@ -776,6 +880,9 @@ function esc(str) {
       loadCompSettings();
       loadRegistrations();
     });
+  });
+  document.querySelectorAll('.nav-item[data-tab="pages"]').forEach(btn => {
+    btn.addEventListener('click', () => loadPages());
   });
 })();
 
