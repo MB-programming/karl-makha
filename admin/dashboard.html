@@ -424,75 +424,88 @@
 
     <!-- Settings Card -->
     <div class="perf-card" style="margin-bottom:24px">
-      <h3 class="perf-card-title"><i class="fas fa-cog"></i> إعدادات المسابقة</h3>
-      <div class="perf-grid">
-
-        <div class="perf-item">
-          <div class="perf-label">حالة التسجيل</div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="comp_active" checked />
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </label>
-          <div class="perf-desc">تفعيل أو إغلاق استقبال التسجيلات</div>
-        </div>
-
-        <div class="perf-item" style="grid-column:1/-1">
-          <div class="perf-label">عنوان المسابقة</div>
-          <input type="text" id="comp_title" class="form-input"
-                 placeholder="مسابقة مخازن العناية" style="max-width:420px" />
-          <div class="perf-desc">يظهر في صفحة التسجيل وفي رسالة التهنئة</div>
-        </div>
-
-        <div class="perf-item" style="grid-column:1/-1">
-          <div class="perf-label">رسالة النجاح (تحت التهنئة)</div>
-          <textarea id="comp_success_msg" class="form-input"
-                    rows="3" style="resize:vertical"
-                    placeholder="شكراً لمشاركتك، سيتم التواصل معك في حال فوزك..."></textarea>
-          <div class="perf-desc">تظهر في نافذة التهنئة بعد التسجيل الناجح</div>
-        </div>
-
-        <div class="perf-item">
-          <div class="perf-label">بادئة رقم المرجع</div>
-          <input type="text" id="comp_ref_prefix" class="form-input"
-                 placeholder="MK" maxlength="8" style="max-width:140px" />
-          <div class="perf-desc">مثال: MK → MK-محمد38472</div>
-        </div>
-
-      </div>
-      <div style="margin-top:18px">
-        <button class="btn-save" onclick="saveCompSettings()">
-          <i class="fas fa-save"></i> حفظ الإعدادات
-        </button>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+        <h3 class="perf-card-title" style="margin-bottom:0"><i class="fas fa-trophy"></i> إعدادات المسابقة</h3>
         <a href="../register.html" target="_blank"
-           style="margin-right:12px;color:var(--gold);font-size:14px;text-decoration:none">
+           style="color:var(--gold);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px">
           <i class="fas fa-external-link-alt"></i> عرض صفحة التسجيل
         </a>
       </div>
+
+      <!-- Row 1: Status + Ref Prefix -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#aaa;margin-bottom:12px">حالة التسجيل</div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label class="toggle-switch">
+              <input type="checkbox" id="comp_active" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+            <span style="font-size:13px;color:#888">تفعيل استقبال التسجيلات</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#aaa;margin-bottom:8px">بادئة رقم المرجع</div>
+          <input type="text" id="comp_ref_prefix" class="form-input"
+                 placeholder="MK" maxlength="8" style="max-width:160px" />
+          <div style="font-size:11px;color:#666;margin-top:5px">مثال: MK → MK-محمد38472</div>
+        </div>
+      </div>
+
+      <!-- Row 2: Title -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:13px;font-weight:600;color:#aaa;margin-bottom:8px">عنوان المسابقة</div>
+        <input type="text" id="comp_title" class="form-input"
+               placeholder="مسابقة مخازن العناية" />
+        <div style="font-size:11px;color:#666;margin-top:5px">يظهر في صفحة التسجيل وفي نافذة التهنئة</div>
+      </div>
+
+      <!-- Row 3: Success message -->
+      <div style="margin-bottom:24px">
+        <div style="font-size:13px;font-weight:600;color:#aaa;margin-bottom:8px">رسالة النجاح (تحت التهنئة)</div>
+        <textarea id="comp_success_msg" class="form-input" rows="3" style="resize:vertical"
+                  placeholder="شكراً لمشاركتك، سيتم التواصل معك في حال فوزك..."></textarea>
+        <div style="font-size:11px;color:#666;margin-top:5px">تظهر في نافذة التهنئة بعد التسجيل الناجح</div>
+      </div>
+
+      <button class="btn-save" onclick="saveCompSettings()">
+        <i class="fas fa-save"></i> حفظ الإعدادات
+      </button>
     </div>
 
     <!-- Stats Row -->
-    <div class="comp-stats" id="comp-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px"></div>
+    <div id="comp-stats"
+         style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px"></div>
 
-    <!-- Filters -->
-    <div class="table-toolbar" style="flex-wrap:wrap;gap:10px;margin-bottom:16px;display:flex;align-items:center">
-      <input type="text"   id="comp-search"    class="search-input" placeholder="بحث باسم / جوال / هوية / بريد..." style="flex:1;min-width:200px" />
-      <select id="comp-city"   class="search-input" style="min-width:130px">
-        <option value="">كل المدن</option>
-      </select>
-      <select id="comp-gender" class="search-input" style="min-width:120px">
-        <option value="">كل الجنسين</option>
-        <option value="male">ذكر</option>
-        <option value="female">أنثى</option>
-      </select>
-      <input type="date" id="comp-date-from" class="search-input" title="من تاريخ" />
-      <input type="date" id="comp-date-to"   class="search-input" title="إلى تاريخ" />
-      <button class="btn-save" onclick="loadRegistrations()" style="padding:8px 16px">
-        <i class="fas fa-filter"></i> فلترة
-      </button>
-      <button class="btn-save" onclick="exportRegistrations()"
-              style="padding:8px 16px;background:var(--green)">
-        <i class="fas fa-file-csv"></i> تصدير CSV
-      </button>
+    <!-- Filters Card -->
+    <div class="perf-card" style="margin-bottom:16px;padding:16px 20px">
+      <!-- Search -->
+      <div style="margin-bottom:12px">
+        <input type="text" id="comp-search" class="search-input"
+               placeholder="بحث باسم / جوال / هوية / بريد..." style="width:100%" />
+      </div>
+      <!-- Second row: dropdowns + dates + buttons -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <select id="comp-city" class="search-input" style="min-width:140px;flex:1">
+          <option value="">كل المدن</option>
+        </select>
+        <select id="comp-gender" class="search-input" style="min-width:120px;flex:1">
+          <option value="">كل الجنسين</option>
+          <option value="male">ذكر</option>
+          <option value="female">أنثى</option>
+        </select>
+        <input type="date" id="comp-date-from" class="search-input"
+               title="من تاريخ" style="flex:1" />
+        <input type="date" id="comp-date-to" class="search-input"
+               title="إلى تاريخ" style="flex:1" />
+        <button class="btn-save" onclick="loadRegistrations()" style="padding:9px 18px;white-space:nowrap">
+          <i class="fas fa-filter"></i> فلترة
+        </button>
+        <button class="btn-save" onclick="exportRegistrations()"
+                style="padding:9px 18px;background:var(--green);white-space:nowrap">
+          <i class="fas fa-file-csv"></i> تصدير CSV
+        </button>
+      </div>
     </div>
 
     <!-- Table -->
