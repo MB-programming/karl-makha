@@ -89,22 +89,20 @@ Options -Indexes
   Header always set X-XSS-Protection "1; mode=block"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
 
-  # Keep-Alive
-  Header always set Connection keep-alive
-
   # Remove ETags
   Header always unset ETag
   FileETag None
 </IfModule>
 
 # ---- PHP Performance ----
+# Note: output_buffering only (zlib.output_compression removed —
+# Apache's mod_deflate/mod_brotli handles compression; PHP-level
+# compression on top causes double-encoding on HTTP/2 mobile connections)
 <IfModule mod_php8.c>
   php_value output_buffering 4096
-  php_flag zlib.output_compression On
 </IfModule>
 <IfModule mod_php7.c>
   php_value output_buffering 4096
-  php_flag zlib.output_compression On
 </IfModule>
 
 # ---- URL Rewriting ----

@@ -3,6 +3,9 @@
 // Public API — Returns all active site data
 // File-cached: cache HIT = 0 DB queries
 // ================================================
+// Suppress PHP errors/warnings from corrupting JSON output
+ini_set('display_errors', 0);
+error_reporting(0);
 require_once __DIR__ . '/config.php';
 
 // ── Cache setup ──────────────────────────────────
@@ -98,23 +101,22 @@ $contact = $db->query("
     ORDER BY sort_order ASC LIMIT 50
 ")->fetchAll();
 
-// Articles from separate DB — 3-second timeout to prevent hangs
+// Articles from separate DB — hard 3-second connect timeout to prevent hangs
+// PDO::MYSQL_ATTR_CONNECT_TIMEOUT is the correct constant for MySQL connection timeouts
+// (PDO::ATTR_TIMEOUT only controls statement execution, not the initial TCP connect)
 $articles = [];
 try {
-    $artPDO = null;
-    if ($artPDO === null) {
-        $artPDO = new PDO(
-            'mysql:host=localhost;dbname=makhazenalenaya_blogs;charset=utf8mb4',
-            'makhazenalenaya_blogs',
-            '?BN0Mn5x$(K$',
-            [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES   => false,
-                PDO::ATTR_TIMEOUT            => 3,
-            ]
-        );
-    }
+    $artPDO = new PDO(
+        'mysql:host=localhost;dbname=makhazenalenaya_blogs;charset=utf8mb4;connect_timeout=3',
+        'makhazenalenaya_blogs',
+        '?BN0Mn5x$(K$',
+        [
+            PDO::ATTR_ERRMODE             => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE  => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES    => false,
+            PDO::MYSQL_ATTR_CONNECT_TIMEOUT => 3,
+        ]
+    );
     $articles = $artPDO->query("
         SELECT id, title, slug, excerpt, cover_image, category, author_name, published_at, is_featured
         FROM articles

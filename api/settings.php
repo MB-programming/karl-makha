@@ -2,6 +2,8 @@
 // ================================================
 // Settings API - Code Injection (header/body)
 // ================================================
+ini_set('display_errors', 0);
+error_reporting(0);
 require_once __DIR__ . '/config.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
