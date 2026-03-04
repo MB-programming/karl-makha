@@ -6,7 +6,7 @@
 "use strict";
 
 // ---- GSAP Setup ----
-gsap.registerPlugin(ScrollTrigger);
+if (typeof gsap !== 'undefined') gsap.registerPlugin(ScrollTrigger);
 
 // ============================================================
 // FLOATING PARTICLES
@@ -801,8 +801,8 @@ async function loadData() {
 
     if (data.success) {
       const s = data.settings || {};
-      // GSAP toggle: '0' = CSS-only mode
-      const useGSAP = s.perf_animations !== '0';
+      // GSAP toggle: '0' = CSS-only mode, or GSAP not loaded
+      const useGSAP = s.perf_animations !== '0' && typeof gsap !== 'undefined';
       if (!useGSAP) document.body.classList.add('css-anim');
 
       renderSocial(data.social || [], useGSAP);
@@ -958,7 +958,7 @@ function initParallax() {
 // ============================================================
 // SCROLL-TRIGGERED GSAP for ScrollTo (fallback)
 // ============================================================
-if (gsap.plugins && !gsap.plugins.scrollTo) {
+if (typeof gsap === 'undefined' || (gsap.plugins && !gsap.plugins.scrollTo)) {
   const _links = document.querySelectorAll('a[href^="#"]');
   _links.forEach(link => {
     link.addEventListener('click', (e) => {
@@ -980,6 +980,15 @@ if (gsap.plugins && !gsap.plugins.scrollTo) {
 document.addEventListener('DOMContentLoaded', () => {
   // Only run homepage-specific code when the preloader exists
   if (!document.getElementById('preloader')) return;
+
+  // If GSAP failed to load (CDN blocked on mobile?), skip animations
+  if (typeof gsap === 'undefined') {
+    const p = document.getElementById('preloader');
+    if (p) p.style.display = 'none';
+    document.body.classList.add('css-anim');
+    loadData();
+    return;
+  }
 
   initParticles();
 

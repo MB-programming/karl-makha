@@ -101,7 +101,7 @@ $contact = $db->query("
 // Articles from separate DB — 3-second timeout to prevent hangs
 $articles = [];
 try {
-    static $artPDO = null;
+    $artPDO = null;
     if ($artPDO === null) {
         $artPDO = new PDO(
             'mysql:host=localhost;dbname=makhazenalenaya_blogs;charset=utf8mb4',
