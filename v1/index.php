@@ -2,11 +2,14 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 
-require_once __DIR__ . '/../api/config.php';
-
 $settings = [];
 try {
-    $db   = getDB();
+    $db = new PDO(
+        'mysql:host=localhost;dbname=makhazenalenaya_maindb;charset=utf8mb4;connect_timeout=5',
+        'makhazenalenaya_makhazenalenaya',
+        'ZG[pJe%b2+!j',
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::MYSQL_ATTR_CONNECT_TIMEOUT => 5]
+    );
     $rows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
     foreach ($rows as $r) $settings[$r['key']] = $r['value'];
 } catch (Exception $e) {}
