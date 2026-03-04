@@ -350,27 +350,72 @@ async function saveSliderSettings() {
 }
 
 // ============================================================
-// PERFORMANCE SETTINGS
+// PERFORMANCE SETTINGS + CACHE MANAGER
 // ============================================================
+
+// ── Format seconds to human-readable ─────────────
+function fmtSec(sec) {
+  sec = Math.max(0, Math.round(+sec));
+  if (sec < 60)   return sec + 'ث';
+  if (sec < 3600) return Math.floor(sec / 60) + ' دقيقة';
+  return Math.floor(sec / 3600) + ' ساعة';
+}
+
+// ── Cache status panel ────────────────────────────
+async function loadCacheStatus() {
+  try {
+    const res  = await fetch('../api/clear_cache.php?status=1');
+    const data = await res.json();
+    if (!data.success) return;
+
+    const s     = data.cache;
+    const badge = document.getElementById('cache-live-badge');
+    const btext = document.getElementById('cache-badge-text');
+
+    if (document.getElementById('cache-generated-at'))
+      document.getElementById('cache-generated-at').textContent = s.exists ? s.generated_at : '—';
+    if (document.getElementById('cache-age'))
+      document.getElementById('cache-age').textContent = s.exists ? fmtSec(s.age_seconds) : '—';
+    if (document.getElementById('cache-remaining'))
+      document.getElementById('cache-remaining').textContent = s.exists ? fmtSec(s.remaining) : '—';
+    if (document.getElementById('cache-ttl-display'))
+      document.getElementById('cache-ttl-display').textContent = s.exists ? fmtSec(s.ttl) : '—';
+
+    if (!badge || !btext) return;
+    if (!s.exists) {
+      badge.className = 'cache-live-badge empty';
+      btext.textContent = 'لا يوجد كاش — سيُنشأ أول طلب';
+    } else if (s.fresh) {
+      badge.className = 'cache-live-badge';
+      btext.textContent = 'نشط — عمر ' + fmtSec(s.age_seconds);
+    } else {
+      badge.className = 'cache-live-badge stale';
+      btext.textContent = 'منتهي — سيُجدَّد أول طلب';
+    }
+  } catch (_) {}
+}
+
 async function loadPerfSettings() {
   try {
     const res  = await fetch('../api/settings.php?admin=1');
     const data = await res.json();
     if (!data.success) return;
 
-    const perfKeys = ['perf_animations', 'perf_cache_api', 'perf_minify_html'];
+    const perfKeys = ['perf_animations', 'perf_cache_api', 'perf_minify_html', 'cache_ttl'];
     data.data.forEach(row => {
       if (!perfKeys.includes(row.key)) return;
       const el = document.getElementById(row.key);
-      if (el) el.value = row.value || '1';
+      if (el) el.value = row.value || (row.key === 'cache_ttl' ? '300' : '1');
     });
 
     // OPcache status indicator
     const badge = document.getElementById('opcache-status');
     if (badge) {
-      const enabled = typeof opcache_get_status === 'function'; // PHP side — just show hint
-      badge.innerHTML = `<span class="status-badge status-active"><i class="fas fa-check-circle"></i> مفعّل — يُمسح بزرار "مسح الكاش"</span>`;
+      badge.innerHTML = `<span class="status-badge status-active"><i class="fas fa-check-circle"></i> مفعّل — يُمسح عند الضغط على "مسح الكاش"</span>`;
     }
+
+    // Also refresh cache status card
+    loadCacheStatus();
   } catch (_) {}
 }
 
@@ -379,6 +424,7 @@ async function savePerfSettings() {
     perf_animations:  document.getElementById('perf_animations')?.value  || '1',
     perf_cache_api:   document.getElementById('perf_cache_api')?.value   || '1',
     perf_minify_html: document.getElementById('perf_minify_html')?.value || '1',
+    cache_ttl:        document.getElementById('cache_ttl')?.value        || '300',
   };
 
   try {
@@ -388,9 +434,10 @@ async function savePerfSettings() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    showToast(data.success ? 'تم حفظ إعدادات الأداء' : (data.message || 'حدث خطأ'), data.success ? 'success' : 'error');
+    showToast(data.success ? 'تم حفظ الإعدادات ✓' : (data.message || 'حدث خطأ'), data.success);
+    if (data.success) loadCacheStatus();
   } catch {
-    showToast('فشل الاتصال بالخادم', 'error');
+    showToast('فشل الاتصال بالخادم', false);
   }
 }
 
@@ -398,21 +445,23 @@ async function savePerfSettings() {
 // CLEAR SITE CACHE
 // ============================================================
 async function clearSiteCache() {
-  const btn = document.getElementById('clear-cache-btn');
-  const icon = btn.querySelector('i');
-  icon.className = 'fas fa-spinner fa-spin';
-  btn.disabled = true;
+  const btn  = document.getElementById('clear-cache-btn');
+  const icon = btn?.querySelector('i');
+  if (icon) icon.className = 'fas fa-spinner fa-spin';
+  if (btn)  btn.disabled = true;
 
   try {
     const res  = await fetch('../api/clear_cache.php', { method: 'POST' });
     const data = await res.json();
-    showToast(data.message || 'تم مسح الكاش', data.success ? 'success' : 'error');
+    showToast(data.message || 'تم مسح الكاش', data.success);
+    // Refresh cache status badge after clearing
+    setTimeout(loadCacheStatus, 400);
   } catch {
-    showToast('فشل الاتصال بالخادم', 'error');
+    showToast('فشل الاتصال بالخادم', false);
   }
 
-  icon.className = 'fas fa-broom';
-  btn.disabled = false;
+  if (icon) icon.className = 'fas fa-broom';
+  if (btn)  btn.disabled = false;
 }
 
 // ============================================================
