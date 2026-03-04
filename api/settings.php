@@ -53,6 +53,9 @@ if ($method === 'POST') {
         // Static pages
         'page_terms'       => 'الشروط والأحكام',
         'page_privacy'     => 'سياسة الخصوصية',
+        // Cache control
+        'cache_ttl'        => 'مدة كاش API (ثانية)',
+        'cache_cleared_at' => 'آخر مسح للكاش',
     ];
     foreach ($body as $key => $value) {
         if (!array_key_exists($key, $labels)) continue;

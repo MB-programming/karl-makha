@@ -177,9 +177,12 @@ if ($method === 'GET' && !empty($_GET['admin'])) {
         $params[] = $_GET['date_to'];
     }
 
+    // For CSV export: no limit (streams directly)
+    // For JSON view: cap at 5000 rows to prevent memory exhaustion
+    $limitClause = (!empty($_GET['export']) && $_GET['export'] === 'csv') ? '' : ' LIMIT 5000';
     $sql = 'SELECT * FROM registrations'
          . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-         . ' ORDER BY created_at DESC';
+         . ' ORDER BY created_at DESC' . $limitClause;
 
     $stmt = $db->prepare($sql);
     $stmt->execute($params);
