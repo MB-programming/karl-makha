@@ -20,6 +20,25 @@ $admin  = !empty($_GET['admin']);
 
 $db = getDB();
 
+// ── Idempotent schema migrations — add missing columns if they don't exist
+foreach ([
+    "ALTER TABLE articles ADD COLUMN tags                 TEXT",
+    "ALTER TABLE articles ADD COLUMN seo_title            VARCHAR(255) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN seo_description      TEXT",
+    "ALTER TABLE articles ADD COLUMN seo_keywords         TEXT",
+    "ALTER TABLE articles ADD COLUMN canonical_url        VARCHAR(500) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN og_title             VARCHAR(255) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN og_description       TEXT",
+    "ALTER TABLE articles ADD COLUMN og_image             VARCHAR(500) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN twitter_title        VARCHAR(255) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN twitter_description  TEXT",
+    "ALTER TABLE articles ADD COLUMN twitter_image        VARCHAR(500) DEFAULT ''",
+    "ALTER TABLE articles ADD COLUMN schema_type          VARCHAR(50) DEFAULT 'Article'",
+    "ALTER TABLE articles ADD COLUMN view_count           INT UNSIGNED DEFAULT 0",
+] as $_sql) {
+    try { $db->exec($_sql); } catch (PDOException $_e) { /* column already exists */ }
+}
+
 // ============================================================
 // GET PUBLIC — قائمة المقالات
 // ============================================================
@@ -123,27 +142,32 @@ if ($method === 'POST') {
         $b['slug'] = generateSlug($b['slug'], $db);
     }
 
-    $stmt = $db->prepare("
-        INSERT INTO articles
-            (title, slug, excerpt, body, cover_image, category, tags,
-             seo_title, seo_description, seo_keywords, canonical_url,
-             og_title, og_description, og_image,
-             twitter_title, twitter_description, twitter_image,
-             schema_type, author_name,
-             is_active, is_featured, sort_order, published_at)
-        VALUES
-            (:title, :slug, :excerpt, :body, :cover_image, :category, :tags,
-             :seo_title, :seo_description, :seo_keywords, :canonical_url,
-             :og_title, :og_description, :og_image,
-             :twitter_title, :twitter_description, :twitter_image,
-             :schema_type, :author_name,
-             :is_active, :is_featured, :sort_order, :published_at)
-    ");
+    try {
+        $stmt = $db->prepare("
+            INSERT INTO articles
+                (title, slug, excerpt, body, cover_image, category, tags,
+                 seo_title, seo_description, seo_keywords, canonical_url,
+                 og_title, og_description, og_image,
+                 twitter_title, twitter_description, twitter_image,
+                 schema_type, author_name,
+                 is_active, is_featured, sort_order, published_at)
+            VALUES
+                (:title, :slug, :excerpt, :body, :cover_image, :category, :tags,
+                 :seo_title, :seo_description, :seo_keywords, :canonical_url,
+                 :og_title, :og_description, :og_image,
+                 :twitter_title, :twitter_description, :twitter_image,
+                 :schema_type, :author_name,
+                 :is_active, :is_featured, :sort_order, :published_at)
+        ");
 
-    $stmt->execute(buildParams($b));
-    $newId = $db->lastInsertId();
+        $stmt->execute(buildParams($b));
+        $newId = $db->lastInsertId();
 
-    echo json_encode(['success' => true, 'message' => 'تم إضافة المقال', 'id' => $newId, 'slug' => $b['slug']], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['success' => true, 'message' => 'تم إضافة المقال', 'id' => $newId, 'slug' => $b['slug']], JSON_UNESCAPED_UNICODE);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'فشل إضافة المقال: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
     exit;
 }
 
@@ -158,36 +182,41 @@ if ($method === 'PUT' && $id) {
         $b['slug'] = generateSlug($b['slug'], $db, $id);
     }
 
-    $stmt = $db->prepare("
-        UPDATE articles SET
-            title              = :title,
-            slug               = :slug,
-            excerpt            = :excerpt,
-            body               = :body,
-            cover_image        = :cover_image,
-            category           = :category,
-            tags               = :tags,
-            seo_title          = :seo_title,
-            seo_description    = :seo_description,
-            seo_keywords       = :seo_keywords,
-            canonical_url      = :canonical_url,
-            og_title           = :og_title,
-            og_description     = :og_description,
-            og_image           = :og_image,
-            twitter_title      = :twitter_title,
-            twitter_description= :twitter_description,
-            twitter_image      = :twitter_image,
-            schema_type        = :schema_type,
-            author_name        = :author_name,
-            is_active          = :is_active,
-            is_featured        = :is_featured,
-            sort_order         = :sort_order,
-            published_at       = :published_at
-        WHERE id = $id
-    ");
+    try {
+        $stmt = $db->prepare("
+            UPDATE articles SET
+                title              = :title,
+                slug               = :slug,
+                excerpt            = :excerpt,
+                body               = :body,
+                cover_image        = :cover_image,
+                category           = :category,
+                tags               = :tags,
+                seo_title          = :seo_title,
+                seo_description    = :seo_description,
+                seo_keywords       = :seo_keywords,
+                canonical_url      = :canonical_url,
+                og_title           = :og_title,
+                og_description     = :og_description,
+                og_image           = :og_image,
+                twitter_title      = :twitter_title,
+                twitter_description= :twitter_description,
+                twitter_image      = :twitter_image,
+                schema_type        = :schema_type,
+                author_name        = :author_name,
+                is_active          = :is_active,
+                is_featured        = :is_featured,
+                sort_order         = :sort_order,
+                published_at       = :published_at
+            WHERE id = $id
+        ");
 
-    $stmt->execute(buildParams($b));
-    echo json_encode(['success' => true, 'message' => 'تم التحديث', 'slug' => $b['slug'] ?? ''], JSON_UNESCAPED_UNICODE);
+        $stmt->execute(buildParams($b));
+        echo json_encode(['success' => true, 'message' => 'تم التحديث', 'slug' => $b['slug'] ?? ''], JSON_UNESCAPED_UNICODE);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'فشل تحديث المقال: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    }
     exit;
 }
 
