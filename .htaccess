@@ -95,15 +95,8 @@ Options -Indexes
 </IfModule>
 
 # ---- PHP Performance ----
-# Note: output_buffering only (zlib.output_compression removed —
-# Apache's mod_deflate/mod_brotli handles compression; PHP-level
-# compression on top causes double-encoding on HTTP/2 mobile connections)
-<IfModule mod_php8.c>
-  php_value output_buffering 4096
-</IfModule>
-<IfModule mod_php7.c>
-  php_value output_buffering 4096
-</IfModule>
+# php_value is NOT used here — server runs PHP-FPM (FastCGI), not mod_php.
+# Use .user.ini for PHP settings instead.
 
 # ---- URL Rewriting ----
 <IfModule mod_rewrite.c>
@@ -114,7 +107,7 @@ Options -Indexes
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
   # Clean URL redirects
-  RewriteRule ^register/?$ /register.html [L,R=301]
+  RewriteRule ^register/?$ /v1/ [L,R=301]
   RewriteRule ^terms/?$ /terms.html [L,R=301]
   RewriteRule ^privacy/?$ /privacy.html [L,R=301]
 </IfModule>
