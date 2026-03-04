@@ -792,9 +792,24 @@ function initCatSlider(autoplay, speed) {
 }
 
 // ============================================================
-// FETCH DATA FROM API
+// FETCH DATA FROM API  (or use inline data injected by PHP)
 // ============================================================
 async function loadData() {
+  // If index.php injected data directly — no network call needed
+  if (window.SITE_DATA) {
+    const data = window.SITE_DATA;
+    const s    = data.settings || {};
+    const useGSAP = s.perf_animations !== '0' && typeof gsap !== 'undefined';
+    if (!useGSAP) document.body.classList.add('css-anim');
+    renderSocial(data.social || [], useGSAP);
+    renderBranches(data.branches || [], useGSAP);
+    renderContact(data.contact || [], useGSAP);
+    renderCategories(data.categories || [], s);
+    renderBrands(data.brands || [], useGSAP);
+    renderArticles(data.articles || []);
+    return;
+  }
+
   try {
     const res  = await fetch('api/get_data.php');
     const data = await res.json();
