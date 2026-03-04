@@ -7,80 +7,95 @@
 ini_set('display_errors', 0);
 error_reporting(0);
 
-require_once __DIR__ . '/api/config.php';
-
 // ---- جلب البيانات من قاعدة البيانات الرئيسية ----
 $site_data = ['success' => true, 'branches' => [], 'brands' => [], 'categories' => [], 'articles' => [], 'social' => [], 'contact' => [], 'settings' => []];
 
 try {
-    $db = getDB();
+    $db = new PDO(
+        'mysql:host=localhost;dbname=makhazenalenaya_maindb;charset=utf8mb4;connect_timeout=5',
+        'makhazenalenaya_makhazenalenaya',
+        'ZG[pJe%b2+!j',
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::MYSQL_ATTR_CONNECT_TIMEOUT => 5]
+    );
 
     // الإعدادات
-    $settingsRows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
-    foreach ($settingsRows as $r) $site_data['settings'][$r['key']] = $r['value'];
+    try {
+        $settingsRows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
+        foreach ($settingsRows as $r) $site_data['settings'][$r['key']] = $r['value'];
+    } catch (Exception $e) {}
 
     // الفروع
-    $site_data['branches'] = $db->query("
-        SELECT id, name_ar, name_en, city_ar, city_en, address_ar, address_en, phone, map_url, sort_order
-        FROM branches WHERE is_active = 1
-        ORDER BY sort_order ASC, city_ar ASC
-        LIMIT 200
-    ")->fetchAll();
+    try {
+        $site_data['branches'] = $db->query("
+            SELECT id, name_ar, name_en, city_ar, city_en, address_ar, address_en, phone, map_url, sort_order
+            FROM branches WHERE is_active = 1
+            ORDER BY sort_order ASC, city_ar ASC
+            LIMIT 200
+        ")->fetchAll();
 
-    // أوقات الدوام
-    $hours_rows = $db->query("
-        SELECT branch_id, day_type, day_label, opens_at, closes_at, is_closed, note, sort_order
-        FROM branch_hours
-        WHERE is_active = 1
-        ORDER BY branch_id ASC, sort_order ASC, id ASC
-    ")->fetchAll();
+        $hours_rows = $db->query("
+            SELECT branch_id, day_type, day_label, opens_at, closes_at, is_closed, note, sort_order
+            FROM branch_hours WHERE is_active = 1
+            ORDER BY branch_id ASC, sort_order ASC, id ASC
+        ")->fetchAll();
 
-    $hours_map = [];
-    foreach ($hours_rows as $h) {
-        $hours_map[$h['branch_id']][] = [
-            'day_type'  => $h['day_type'],
-            'day_label' => $h['day_label'],
-            'opens_at'  => substr($h['opens_at'],  0, 5),
-            'closes_at' => substr($h['closes_at'], 0, 5),
-            'is_closed' => (bool)$h['is_closed'],
-            'note'      => $h['note'],
-        ];
+        $hours_map = [];
+        foreach ($hours_rows as $h) {
+            $hours_map[$h['branch_id']][] = [
+                'day_type'  => $h['day_type'],
+                'day_label' => $h['day_label'],
+                'opens_at'  => substr($h['opens_at'],  0, 5),
+                'closes_at' => substr($h['closes_at'], 0, 5),
+                'is_closed' => (bool)$h['is_closed'],
+                'note'      => $h['note'],
+            ];
+        }
+        foreach ($site_data['branches'] as &$b) {
+            $b['working_hours'] = $hours_map[$b['id']] ?? [];
+        }
+        unset($b);
+    } catch (Exception $e) {
+        $site_data['branches'] = [];
     }
-    foreach ($site_data['branches'] as &$b) {
-        $b['working_hours'] = $hours_map[$b['id']] ?? [];
-    }
-    unset($b);
 
     // التصنيفات
-    $site_data['categories'] = $db->query("
-        SELECT id, name_ar, slug, icon, description
-        FROM categories WHERE is_active = 1
-        ORDER BY sort_order ASC, id ASC LIMIT 200
-    ")->fetchAll();
+    try {
+        $site_data['categories'] = $db->query("
+            SELECT id, name_ar, slug, icon, description
+            FROM categories WHERE is_active = 1
+            ORDER BY sort_order ASC, id ASC LIMIT 200
+        ")->fetchAll();
+    } catch (Exception $e) {}
 
     // البراندات
-    $site_data['brands'] = $db->query("
-        SELECT id, name_ar, name_en, logo_url, website_url, sort_order
-        FROM brands WHERE is_active = 1
-        ORDER BY sort_order ASC, name_en ASC LIMIT 200
-    ")->fetchAll();
+    try {
+        $site_data['brands'] = $db->query("
+            SELECT id, name_ar, name_en, logo_url, website_url, sort_order
+            FROM brands WHERE is_active = 1
+            ORDER BY sort_order ASC, name_en ASC LIMIT 200
+        ")->fetchAll();
+    } catch (Exception $e) {}
 
     // السوشيال ميديا
-    $site_data['social'] = $db->query("
-        SELECT id, platform, platform_ar, url, username, icon, color, sort_order
-        FROM social_media WHERE is_active = 1
-        ORDER BY sort_order ASC LIMIT 50
-    ")->fetchAll();
+    try {
+        $site_data['social'] = $db->query("
+            SELECT id, platform, platform_ar, url, username, icon, color, sort_order
+            FROM social_media WHERE is_active = 1
+            ORDER BY sort_order ASC LIMIT 50
+        ")->fetchAll();
+    } catch (Exception $e) {}
 
     // معلومات التواصل
-    $site_data['contact'] = $db->query("
-        SELECT id, type, value, label_ar
-        FROM contact_info WHERE is_active = 1
-        ORDER BY sort_order ASC LIMIT 50
-    ")->fetchAll();
+    try {
+        $site_data['contact'] = $db->query("
+            SELECT id, type, value, label_ar
+            FROM contact_info WHERE is_active = 1
+            ORDER BY sort_order ASC LIMIT 50
+        ")->fetchAll();
+    } catch (Exception $e) {}
 
 } catch (Exception $e) {
-    // في حالة فشل الاتصال، نكمل بمصفوفات فارغة — main.js سيستخدم fallback
+    // فشل الاتصال بقاعدة البيانات — الصفحة ستعمل بدون بيانات
 }
 
 // ---- المقالات من قاعدة البيانات المنفصلة ----

@@ -34,72 +34,95 @@ header('Access-Control-Allow-Origin: *');
 header('Vary: Accept-Encoding');
 header('X-Cache: MISS');
 
-$db = getDB();
+try {
+    $db = getDB();
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Database unavailable'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // Settings first (controls cache TTL + feature flags)
-$settingsRows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
 $settings = [];
-foreach ($settingsRows as $r) $settings[$r['key']] = $r['value'];
+try {
+    $settingsRows = $db->query("SELECT `key`, value FROM settings")->fetchAll();
+    foreach ($settingsRows as $r) $settings[$r['key']] = $r['value'];
+} catch (Exception $e) {}
 
 $cacheEnabled = ($settings['perf_cache_api'] ?? '1') !== '0';
 $cacheTTL     = max(60, (int)($settings['cache_ttl'] ?? 300));
 
-// Branches (with LIMIT safety cap)
-$branches = $db->query("
-    SELECT id, name_ar, name_en, city_ar, city_en, address_ar, address_en, phone, map_url, sort_order
-    FROM branches WHERE is_active = 1
-    ORDER BY sort_order ASC, city_ar ASC
-    LIMIT 200
-")->fetchAll();
+// Branches
+$branches   = [];
+$hours_map  = [];
+try {
+    $branches = $db->query("
+        SELECT id, name_ar, name_en, city_ar, city_en, address_ar, address_en, phone, map_url, sort_order
+        FROM branches WHERE is_active = 1
+        ORDER BY sort_order ASC, city_ar ASC
+        LIMIT 200
+    ")->fetchAll();
 
-// All branch hours in one query — no N+1
-$hours_rows = $db->query("
-    SELECT branch_id, day_type, day_label, opens_at, closes_at, is_closed, note, sort_order
-    FROM branch_hours
-    WHERE is_active = 1
-    ORDER BY branch_id ASC, sort_order ASC, id ASC
-")->fetchAll();
+    $hours_rows = $db->query("
+        SELECT branch_id, day_type, day_label, opens_at, closes_at, is_closed, note, sort_order
+        FROM branch_hours
+        WHERE is_active = 1
+        ORDER BY branch_id ASC, sort_order ASC, id ASC
+    ")->fetchAll();
 
-$hours_map = [];
-foreach ($hours_rows as $h) {
-    $hours_map[$h['branch_id']][] = [
-        'day_type'  => $h['day_type'],
-        'day_label' => $h['day_label'],
-        'opens_at'  => substr($h['opens_at'],  0, 5),
-        'closes_at' => substr($h['closes_at'], 0, 5),
-        'is_closed' => (bool)$h['is_closed'],
-        'note'      => $h['note'],
-    ];
+    foreach ($hours_rows as $h) {
+        $hours_map[$h['branch_id']][] = [
+            'day_type'  => $h['day_type'],
+            'day_label' => $h['day_label'],
+            'opens_at'  => substr($h['opens_at'],  0, 5),
+            'closes_at' => substr($h['closes_at'], 0, 5),
+            'is_closed' => (bool)$h['is_closed'],
+            'note'      => $h['note'],
+        ];
+    }
+    foreach ($branches as &$b) {
+        $b['working_hours'] = $hours_map[$b['id']] ?? [];
+    }
+    unset($b);
+} catch (Exception $e) {
+    $branches = [];
 }
-foreach ($branches as &$b) {
-    $b['working_hours'] = $hours_map[$b['id']] ?? [];
-}
-unset($b);
 
 // Categories, Brands, Social, Contact
-$categories = $db->query("
-    SELECT id, name_ar, slug, icon, description
-    FROM categories WHERE is_active = 1
-    ORDER BY sort_order ASC, id ASC LIMIT 200
-")->fetchAll();
+$categories = [];
+try {
+    $categories = $db->query("
+        SELECT id, name_ar, slug, icon, description
+        FROM categories WHERE is_active = 1
+        ORDER BY sort_order ASC, id ASC LIMIT 200
+    ")->fetchAll();
+} catch (Exception $e) {}
 
-$brands = $db->query("
-    SELECT id, name_ar, name_en, logo_url, website_url, sort_order
-    FROM brands WHERE is_active = 1
-    ORDER BY sort_order ASC, name_en ASC LIMIT 200
-")->fetchAll();
+$brands = [];
+try {
+    $brands = $db->query("
+        SELECT id, name_ar, name_en, logo_url, website_url, sort_order
+        FROM brands WHERE is_active = 1
+        ORDER BY sort_order ASC, name_en ASC LIMIT 200
+    ")->fetchAll();
+} catch (Exception $e) {}
 
-$social = $db->query("
-    SELECT id, platform, platform_ar, url, username, icon, color, sort_order
-    FROM social_media WHERE is_active = 1
-    ORDER BY sort_order ASC LIMIT 50
-")->fetchAll();
+$social = [];
+try {
+    $social = $db->query("
+        SELECT id, platform, platform_ar, url, username, icon, color, sort_order
+        FROM social_media WHERE is_active = 1
+        ORDER BY sort_order ASC LIMIT 50
+    ")->fetchAll();
+} catch (Exception $e) {}
 
-$contact = $db->query("
-    SELECT id, type, value, label_ar
-    FROM contact_info WHERE is_active = 1
-    ORDER BY sort_order ASC LIMIT 50
-")->fetchAll();
+$contact = [];
+try {
+    $contact = $db->query("
+        SELECT id, type, value, label_ar
+        FROM contact_info WHERE is_active = 1
+        ORDER BY sort_order ASC LIMIT 50
+    ")->fetchAll();
+} catch (Exception $e) {}
 
 // Articles from separate DB — hard 3-second connect timeout to prevent hangs
 // PDO::MYSQL_ATTR_CONNECT_TIMEOUT is the correct constant for MySQL connection timeouts
